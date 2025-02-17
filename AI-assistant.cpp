@@ -5,8 +5,6 @@
 #include <algorithm>
 #include <cctype>
 
-using namespace std;
-
 int main() {
     Recorder recorder;
     Recognizer recognizer("software\\whisper.cpp\\bin\\whisper-cli.exe", "software\\whisper.cpp\\models\\ggml-base.en.bin");
@@ -15,8 +13,8 @@ int main() {
 
     while (true) {
         recorder.record("voice_record.wav");
-        string text = recognizer.recognize("voice_record.wav");
-        wstring wtext(text.begin(), text.end());
+        std::string text = recognizer.recognize("voice_record.wav");
+        std::wstring wtext(text.begin(), text.end());
         tts.speak(wtext);
 
         /*std::transform(text.begin(), text.end(), text.begin(), ::tolower);
