@@ -11,11 +11,16 @@ int main() {
 
     TextToSpeech tts;
 
+    KoboldClient kobold("http://localhost:5001/api/generate"); // Адрес сервера KoboldCpp
+    
     while (true) {
         recorder.record("voice_record.wav");
-        std::string text = recognizer.recognize("voice_record.wav");
-        std::wstring wtext(text.begin(), text.end());
-        tts.speak(wtext);
+        std::string speech = recognizer.recognize("voice_record.wav");
+
+        std::string response = kobold.sendRequest(speech);
+
+        std::wstring w_responce(response.begin(), response.end());
+        tts.speak(w_responce);
 
         /*std::transform(text.begin(), text.end(), text.begin(), ::tolower);
         if (text.find("stop") != std::string::npos || text.find("exit") != std::string::npos) {
