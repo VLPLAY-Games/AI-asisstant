@@ -1,50 +1,22 @@
-//#pragma once
-//
-//#ifndef RECORDER_H
-//#define RECORDER_H
-//#include <string>
-//
-//class Recorder {
-//public:
-//    Recorder(const std::string& microphone_name = "Microphone (G435 Wireless Gaming Headset)");
-//    void record(const std::string& filename, int duration = 5);
-//
-//private:
-//    std::string microphone_name;
-//};
-//
-//#endif // RECORDER_H
+﻿#pragma once
 
-
-#pragma once
 #ifndef RECORDER_H
 #define RECORDER_H
 
 #include <string>
-#include <functional>
 #include <atomic>
-#include <thread>
 
 class Recorder {
 public:
-    Recorder(const std::string& microphone_name = "Microphone (G435 Wireless Gaming Headset)");
-    ~Recorder();
+    // Конструктор с параметром имени микрофона, по умолчанию указывает на "Microphone (2- USB PnP Audio Device)"
+    Recorder(const std::string& microphone_name = "Microphone (2- USB PnP Audio Device)");
 
-    void startRecording(const std::string& filename);
-    void stopRecording();
-
-    bool isRecording() const;
-
-    void setOnSpeechStartCallback(const std::function<void()>& callback);
-    void setOnSpeechEndCallback(const std::function<void()>& callback);
+    // Метод для записи аудио, с параметрами: имя файла и длительность записи (по умолчанию 5 секунд)
+    void record(const std::string& filename, int duration = 5);
 
 private:
-    std::string microphone_name;
-    std::atomic<bool> is_recording;
-    std::function<void()> on_speech_start;
-    std::function<void()> on_speech_end;
-
-    void processAudioStream(const std::string& filename);
+    std::string microphone_name;       // Имя микрофона
+    std::atomic<bool> stopRecording;   // Атомарная переменная для остановки записи
 };
 
 #endif // RECORDER_H
