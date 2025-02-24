@@ -1,4 +1,5 @@
 ﻿#include "../include/kobold_client.h"
+#include <iostream>
 
 KoboldClient::KoboldClient(const std::string& server_url) : server_url(server_url) {
     curl_global_init(CURL_GLOBAL_ALL);
@@ -61,10 +62,11 @@ std::string KoboldClient::sendRequest(const std::string& prompt) {
         return "";
     }
 
-    
     std::string response;
     std::string escapedPrompt = escapeJsonString(prompt);
     std::string jsonData = R"({"prompt": ")" + escapedPrompt + R"(", "max_length": 100})"; // JSON-запрос к KoboldCpp
+
+    std::cout << "Sending request to AI: " << jsonData << std::endl; // Отладочный вывод
 
     struct curl_slist* headers = nullptr;
     headers = curl_slist_append(headers, "Content-Type: application/json");
@@ -84,6 +86,7 @@ std::string KoboldClient::sendRequest(const std::string& prompt) {
     curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
 
-    // Извлекаем только "response" из JSON-ответа
+    std::cout << "AI response: " << response << std::endl; // Отладочный вывод
+
     return getResponseFromJson(response);
 }
