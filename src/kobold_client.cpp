@@ -63,6 +63,7 @@ std::string KoboldClient::getResponseFromJson(const std::string& jsonResponse) {
 }
 
 std::string KoboldClient::sendRequest(const std::string& prompt) {
+    std::cout << std::endl;
     CURL* curl = curl_easy_init();
     if (!curl) {
         log.error("Failed to initialize cURL.");

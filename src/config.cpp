@@ -4,6 +4,8 @@
 #include <iostream>
 
 // Определение статических переменных
+std::string Config::app_name = "";
+std::string Config::app_version = "";
 std::string Config::microphone = "";
 std::string Config::log_path = "";
 std::string Config::wav_path = "";
@@ -48,32 +50,38 @@ void Config::parseLine(const std::string& line) {
         value.erase(value.find_last_not_of(" \t") + 1);
 
         // Присваиваем значения переменным
-        if (key == "microphone") {
+        if (key == "app_name")
+            app_name = value;
+
+        else if (key == "app_version") 
+            app_version = value;
+        
+        else if (key == "microphone") 
             microphone = value;
-        }
-        else if (key == "log_path") {
+        
+        else if (key == "log_path") 
             log_path = value;
-        }
-        else if (key == "wav_path") {
+        
+        else if (key == "wav_path") 
             wav_path = value;
-        }
-        else if (key == "output_txt_path") {
+        
+        else if (key == "output_txt_path") 
             output_txt_path = value;
-        }
-        else if (key == "silence_db") {
+        
+        else if (key == "silence_db") 
             silence_db = std::stoi(value);
-        }
-        else if (key == "whisper_cli_path") {
+        
+        else if (key == "whisper_cli_path") 
             whisper_cli_path = value;
-        }
-        else if (key == "whisper_model_path") {
+        
+        else if (key == "whisper_model_path") 
             whisper_model_path = value;
-        }
-        else if (key == "koboldcpp_link") {
+        
+        else if (key == "koboldcpp_link") 
             koboldcpp_link = value;
-        }
-        else {
+        
+        else 
             std::cerr << "Warning: Unknown config key: " << key << std::endl;
-        }
+        
     }
 }

@@ -20,6 +20,7 @@ TextToSpeech::~TextToSpeech() {
 }
 
 void TextToSpeech::speak(const std::wstring& text) {
+    std::cout << std::endl;
     if (!initialized) {
         log.error("TextToSpeech is not initialized. Cannot speak.");
         return;

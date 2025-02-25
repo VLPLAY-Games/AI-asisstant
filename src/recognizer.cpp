@@ -11,7 +11,7 @@ Recognizer::Recognizer(const std::string& whisper_path, const std::string& model
 
 std::string Recognizer::recognize(const std::string& filename) {
     log.info("Starting recognition for file: " + filename);
-    std::cout << "Processing...\n";
+    std::cout << std::endl << "Processing...\n";
 
     // Генерируем имя выходного текстового файла
     std::string output_txt_file = filename + ".txt";

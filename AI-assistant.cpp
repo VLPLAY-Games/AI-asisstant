@@ -10,6 +10,8 @@
 int main() {
     Config::loadConfig("files/config.cfg");
     Log log(Config::log_path);
+    log.info("===================   " + Config::app_name + " v" + Config::app_version + "   ===================");
+    std::cout << Config::app_name + " v" + Config::app_version << std::endl;
     log.info("Program started");
 
     log.info("Initializing recorder...");
@@ -44,6 +46,7 @@ int main() {
     }
 
     log.info("Program closed");
+    log.info("=========================================================");
     log.close_log();
     return 0;
 }

@@ -1,5 +1,4 @@
 ﻿#pragma once
-
 #ifndef CONFIG_H
 #define CONFIG_H
 
@@ -8,6 +7,8 @@
 class Config {
 public:
     // Объявление статических переменных
+    static std::string app_name;
+    static std::string app_version;
     static std::string microphone;
     static std::string log_path;
     static std::string wav_path;

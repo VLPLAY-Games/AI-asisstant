@@ -14,7 +14,8 @@ Recorder::Recorder(const std::string& microphone_name, Log& log)
 
 void Recorder::record(const std::string& filename, int silence_db) {
     log.info("Starting recording to file: " + filename);
-    std::cout << "Listening...\n";
+
+    std::cout << std::endl << "Listening...\n";
 
     // Формируем команду для ffmpeg
     std::string command = "ffmpeg -f dshow -i audio=\"" + microphone_name +
