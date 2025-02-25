@@ -2,6 +2,7 @@ AI-assistant/
 x64/
 software/
 files/voice_record.wav
+files/log.log
 AI-assistant.sln
 AI-assistant.vcxproj
 AI-assistant.vcxproj.filters
