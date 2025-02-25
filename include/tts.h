@@ -1,22 +1,28 @@
-#pragma once
-
+﻿#pragma once
 #ifndef TTS_H
 #define TTS_H
 
 #include <sapi.h>
 #include <iostream>
 #include <string>
+#include "log.h"
 
 #pragma comment(lib, "sapi.lib")
 
 class TextToSpeech {
 public:
-    TextToSpeech();
+    // Конструктор с объектом Log
+    TextToSpeech(Log& log);
+
+    // Деструктор
     ~TextToSpeech();
+
+    // Метод для воспроизведения текста
     void speak(const std::wstring& text);
 
 private:
-    bool initialized;
+    bool initialized;  // Флаг успешной инициализации
+    Log& log;         // Ссылка на объект Log для записи в лог
 };
 
 #endif // TTS_H

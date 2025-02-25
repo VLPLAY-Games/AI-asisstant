@@ -10,30 +10,40 @@
 int main() {
     Config::loadConfig("files/config.cfg");
     Log log(Config::log_path);
+    log.info("Program started");
 
-    log.info("Programm started");
-    Recorder recorder(Config::microphone);
-    Recognizer recognizer(Config::whisper_cli_path, Config::whisper_model_path);
-    TextToSpeech tts;
-    KoboldClient kobold(Config::koboldcpp_link);
-    
+    log.info("Initializing recorder...");
+    Recorder recorder(Config::microphone, log);
+
+    log.info("Initializing recognizer...");
+    Recognizer recognizer(Config::whisper_cli_path, Config::whisper_model_path, log);
+
+    log.info("Initializing text-to-speech...");
+    TextToSpeech tts(log);
+
+    log.info("Initializing koboldcpp...");
+    KoboldClient kobold(Config::koboldcpp_link, log);
+
     while (true) {
-        recorder.record(Config::wav_path);
+        recorder.record(Config::wav_path, Config::silence_db);
         std::string speech = recognizer.recognize(Config::wav_path);
-        std::cout << speech << std::endl;
+        if (speech != "error") {
+            std::string response = kobold.sendRequest(speech);
 
+            std::wstring w_response(response.begin(), response.end());
+            tts.speak(w_response);
 
-
-        std::string response = kobold.sendRequest(speech);
-
-        std::wstring w_responce(response.begin(), response.end());
-        tts.speak(w_responce);
-
-        /*std::transform(speech.begin(), speech.end(), speech.begin(), ::tolower);
-        if (speech.find("stop") != std::string::npos || speech.find("exit") != std::string::npos) {
-            break;
-        }*/
+            std::transform(speech.begin(), speech.end(), speech.begin(), ::tolower);
+            if (speech.find("stop") != std::string::npos || speech.find("exit") != std::string::npos) {
+                break;
+            }
+        }
+        else {
+            log.error("An error has occurred while performing main task");
+        }
     }
 
+    log.info("Program closed");
+    log.close_log();
     return 0;
 }
