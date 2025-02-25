@@ -1,4 +1,5 @@
-﻿#include "include/log.h"
+﻿#include "include/config.h"
+#include "include/log.h"
 #include "include/recorder.h"
 #include "include/recognizer.h"
 #include "include/tts.h"
@@ -7,22 +8,26 @@
 #include <cctype>
 
 int main() {
-    Log log("files/log.log");
+    Config::loadConfig("files/config.cfg");
+    Log log(Config::log_path);
+
     log.info("Programm started");
-    Recorder recorder;
-    Recognizer recognizer("software\\whisper.cpp\\bin\\whisper-cli.exe", "software\\whisper.cpp\\models\\ggml-base.en.bin");
-
+    Recorder recorder(Config::microphone);
+    Recognizer recognizer(Config::whisper_cli_path, Config::whisper_model_path);
     TextToSpeech tts;
-
-    KoboldClient kobold("http://localhost:5001/api/generate"); // Адрес сервера KoboldCpp
+    KoboldClient kobold(Config::koboldcpp_link);
     
     while (true) {
-        recorder.record("voice_record.wav");
-        std::string speech = recognizer.recognize("voice_record.wav");
-        /*std::string response = kobold.sendRequest(speech);
+        recorder.record(Config::wav_path);
+        std::string speech = recognizer.recognize(Config::wav_path);
+        std::cout << speech << std::endl;
+
+
+
+        std::string response = kobold.sendRequest(speech);
 
         std::wstring w_responce(response.begin(), response.end());
-        tts.speak(w_responce);*/
+        tts.speak(w_responce);
 
         /*std::transform(speech.begin(), speech.end(), speech.begin(), ::tolower);
         if (speech.find("stop") != std::string::npos || speech.find("exit") != std::string::npos) {

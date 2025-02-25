@@ -16,7 +16,7 @@ void Recorder::record(const std::string& filename, int duration) {
 
     // Формируем команду для ffmpeg
     std::string command = "ffmpeg -f dshow -i audio=\"" + microphone_name +
-        "\" -af \"silencedetect=n=-20dB:d=3\" -ar 16000 -ac 1 -c:a pcm_s16le " + filename +
+        "\" -af \"silencedetect=n=-30dB:d=3\" -ar 16000 -ac 1 -c:a pcm_s16le " + filename +
         " -y -loglevel info 2>&1";
 
     // Запускаем процесс ffmpeg в отдельном потоке

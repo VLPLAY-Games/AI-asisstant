@@ -9,7 +9,7 @@
 class Recorder {
 public:
     // Конструктор с параметром имени микрофона, по умолчанию указывает на "Microphone (2- USB PnP Audio Device)"
-    Recorder(const std::string& microphone_name = "Microphone (2- USB PnP Audio Device)");
+    Recorder(const std::string& microphone_name);
 
     // Метод для записи аудио, с параметрами: имя файла и длительность записи (по умолчанию 5 секунд)
     void record(const std::string& filename, int duration = 5);
