@@ -1,4 +1,5 @@
-﻿#include "include/recorder.h"
+﻿#include "include/log.h"
+#include "include/recorder.h"
 #include "include/recognizer.h"
 #include "include/tts.h"
 #include "include/kobold_client.h"
@@ -6,6 +7,8 @@
 #include <cctype>
 
 int main() {
+    Log log("files/log.log");
+    log.info("Programm started");
     Recorder recorder;
     Recognizer recognizer("software\\whisper.cpp\\bin\\whisper-cli.exe", "software\\whisper.cpp\\models\\ggml-base.en.bin");
 
