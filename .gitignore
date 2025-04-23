@@ -8,3 +8,5 @@ AI-assistant.sln
 AI-assistant.vcxproj
 AI-assistant.vcxproj.filters
 AI-assistant.vcxproj.user
+files/voice_record.wav.txt
+ffmpeg_output.log
