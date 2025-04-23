@@ -1,24 +1,21 @@
 ﻿#pragma once
-
-#ifndef RECORDER_H
-#define RECORDER_H
-
 #include <string>
-#include <atomic>
-#include "log.h"
+#include <vector>
+#include <portaudio.h>
 
 class Recorder {
 public:
-    // Конструктор с параметром имени микрофона и объектом Log
-    Recorder(const std::string& microphone_name, Log& log);
+    Recorder();
+    ~Recorder();
 
-    // Метод для записи аудио
-    void record(const std::string& filename, int silence_db);
+    // Устанавливаем имя микрофона
+    void setMicrophone(const std::string& name);
+
+    // Основной метод записи
+    bool record(const std::string& wavPath, int silenceThreshold);
+    void listAvailableMicrophones() const;
 
 private:
-    std::string microphone_name;       // Имя микрофона
-    std::atomic<bool> stopRecording;   // Атомарная переменная для остановки записи
-    Log& log;                          // Ссылка на объект Log
+    std::string microphone_name;
+    PaDeviceIndex findInputDeviceByName(const std::string& name);
 };
-
-#endif // RECORDER_H

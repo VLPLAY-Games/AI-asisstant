@@ -6,19 +6,28 @@
 #include "include/kobold_client.h"
 #include <algorithm>
 #include <cctype>
+#include <locale>
 
 int main() {
-    Config::loadConfig("files/config.cfg");
+    // Загрузка конфигурации
+    if (!Config::loadConfig("files/config.cfg")) {
+        std::cerr << "Failed to load configuration. Exiting.\n";
+        return 1;
+    }
+    // Логгер
     Log log(Config::log_path);
     log.info("===================   " + Config::app_name + " v" + Config::app_version + "   ===================");
     std::cout << Config::app_name + " v" + Config::app_version << std::endl;
     log.info("Program started");
 
+    // Инициализация компонентов
     log.info("Initializing recorder...");
-    Recorder recorder(Config::microphone, log);
+    Recorder recorder;
+    recorder.listAvailableMicrophones();
+    recorder.setMicrophone(Config::microphone);
 
     log.info("Initializing recognizer...");
-    Recognizer recognizer(Config::whisper_cli_path, Config::whisper_model_path, log);
+    Recognizer recognizer(Config::whisper_cli_path, Config::whisper_model_path);
 
     log.info("Initializing text-to-speech...");
     TextToSpeech tts(log);
@@ -26,22 +35,32 @@ int main() {
     log.info("Initializing koboldcpp...");
     KoboldClient kobold(Config::koboldcpp_link, log);
 
+    // Основной цикл
     while (true) {
-        recorder.record(Config::wav_path, Config::silence_db);
-        std::string speech = recognizer.recognize(Config::wav_path);
-        if (speech != "error") {
-            std::string response = kobold.sendRequest(speech);
+        log.info("Recording...");
+        if (!recorder.record(Config::wav_path, Config::silence_db)) {
+            log.error("Failed to record audio");
+            continue;
+        }
 
+        log.info("Recognizing...");
+        std::string speech = recognizer.recognize(Config::wav_path);
+
+        if (speech != "error" && !speech.empty()) {
+            log.info("Speech recognized: " + speech);
+            std::string response = kobold.sendRequest(speech);
             std::wstring w_response(response.begin(), response.end());
             tts.speak(w_response);
 
+            // Проверка условий завершения
             std::transform(speech.begin(), speech.end(), speech.begin(), ::tolower);
             if (speech.find("stop") != std::string::npos || speech.find("exit") != std::string::npos) {
+                log.info("Stop/Exit command detected. Exiting loop.");
                 break;
             }
         }
         else {
-            log.error("An error has occurred while performing main task");
+            log.error("Recognition error or empty result");
         }
     }
 
