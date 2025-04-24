@@ -1,4 +1,9 @@
-﻿#include "../include/tts.h"
+﻿  //  Copyright MIT License 2025 VL_PLAY Games
+
+
+#include "../include/tts.h"
+#include <string>
+#include <iostream>
 
 TextToSpeech::TextToSpeech(Log& log)
     : initialized(false), log(log) {
@@ -6,8 +11,7 @@ TextToSpeech::TextToSpeech(Log& log)
     if (FAILED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED))) {
         log.error("Failed to initialize COM library.");
         initialized = false;
-    }
-    else {
+    } else {
         initialized = true;
         log.info("TextToSpeech initialized successfully.");
     }
@@ -28,15 +32,15 @@ void TextToSpeech::speak(const std::wstring& text) {
 
     // Создание экземпляра голоса
     ISpVoice* pVoice = nullptr;
-    HRESULT hr = CoCreateInstance(CLSID_SpVoice, nullptr, CLSCTX_ALL, IID_ISpVoice, (void**)&pVoice);
+    HRESULT hr = CoCreateInstance(CLSID_SpVoice, nullptr, \
+        CLSCTX_ALL, IID_ISpVoice, (void**)&pVoice);
     if (SUCCEEDED(hr)) {
         // Установка вывода и воспроизведение текста
         pVoice->SetOutput(nullptr, TRUE);
         pVoice->Speak(text.c_str(), SPF_IS_XML, nullptr);
         pVoice->Release();
         log.info("Text spoken: " + std::string(text.begin(), text.end()));
-    }
-    else {
+    } else {
         log.error("Failed to create SAPI voice instance.");
     }
 }

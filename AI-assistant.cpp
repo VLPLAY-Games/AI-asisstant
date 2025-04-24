@@ -1,12 +1,17 @@
-﻿#include "include/config.h"
+﻿  //  Copyright MIT License 2025 VL_PLAY Games
+
+
+#include <cctype>
+#include <locale>
+#include <string>
+#include <iostream>
+#include <algorithm>
+#include "include/config.h"
 #include "include/log.h"
 #include "include/recorder.h"
 #include "include/recognizer.h"
 #include "include/tts.h"
 #include "include/kobold_client.h"
-#include <algorithm>
-#include <cctype>
-#include <locale>
 
 int main() {
     // Загрузка конфигурации
@@ -16,7 +21,8 @@ int main() {
     }
     // Логгер
     Log log(Config::log_path);
-    log.info("===================   " + Config::app_name + " v" + Config::app_version + "   ===================");
+    log.info("===================   " + Config::app_name + " v" + \
+        Config::app_version + "   ===================");
     std::cout << Config::app_name + " v" + Config::app_version << std::endl;
     log.info("Program started");
 
@@ -53,15 +59,15 @@ int main() {
             tts.speak(w_response);
 
             // Проверка условий завершения
-            std::transform(speech.begin(), speech.end(), speech.begin(), ::tolower);
-            if (speech.find("stop") != std::string::npos || speech.find("exit") != std::string::npos) {
+            std::transform(speech.begin(), speech.end(), \
+                speech.begin(), ::tolower);
+            if (speech.find("stop") != std::string::npos || \
+                speech.find("exit") != std::string::npos) {
                 log.info("Stop/Exit command detected. Exiting loop.");
                 break;
             }
         }
-        else {
-            log.error("Recognition error or empty result");
-        }
+        else log.error("Recognition error or empty result");
     }
 
     log.info("Program closed");

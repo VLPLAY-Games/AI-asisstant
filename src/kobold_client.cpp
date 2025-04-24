@@ -1,5 +1,9 @@
-﻿#include "../include/kobold_client.h"
+﻿  //  Copyright MIT License 2025 VL_PLAY Games
+
+
+#include "../include/kobold_client.h"
 #include <iostream>
+#include <string>
 
 KoboldClient::KoboldClient(const std::string& server_url, Log& log)
     : server_url(server_url), log(log) {
@@ -12,7 +16,8 @@ KoboldClient::~KoboldClient() {
     log.info("KoboldClient destroyed.");
 }
 
-size_t KoboldClient::writeCallback(void* contents, size_t size, size_t nmemb, std::string* output) {
+size_t KoboldClient::writeCallback(void* contents, size_t size, \
+    size_t nmemb, std::string* output) {
     size_t totalSize = size * nmemb;
     output->append((char*)contents, totalSize);
     return totalSize;
@@ -21,21 +26,15 @@ size_t KoboldClient::writeCallback(void* contents, size_t size, size_t nmemb, st
 std::string KoboldClient::escapeJsonString(const std::string& str) {
     std::string escapedStr;
     for (char c : str) {
-        if (c == '"') {
-            escapedStr += "\\\""; // Экранирование кавычек
-        }
-        else if (c == '\\') {
-            escapedStr += "\\\\"; // Экранирование обратного слэша
-        }
-        else if (c == '\n') {
-            escapedStr += "\\n"; // Экранирование новой строки
-        }
-        else if (c == '\t') {
-            escapedStr += "\\t"; // Экранирование табуляции
-        }
-        else {
-            escapedStr += c; // Оставляем остальные символы
-        }
+        if (c == '"') escapedStr += "\\\"";  // Экранирование кавычек
+
+        else if (c == '\\') escapedStr += "\\\\";  // обратного слэша
+
+        else if (c == '\n') escapedStr += "\\n";  // новой строки
+
+        else if (c == '\t') escapedStr += "\\t";  // табуляции
+
+        else escapedStr += c;  // Оставляем остальные символы
     }
     return escapedStr;
 }
@@ -46,9 +45,9 @@ std::string KoboldClient::getResponseFromJson(const std::string& jsonResponse) {
         json parsedJson = json::parse(jsonResponse);
 
         // Извлекаем значение поля "response"
-        if (parsedJson.contains("response")) {
+        if (parsedJson.contains("response"))
             return parsedJson["response"];
-        }
+
         else {
             log.error("'response' field not found in JSON.");
             std::cerr << "'response' field not found in JSON." << std::endl;
@@ -57,7 +56,8 @@ std::string KoboldClient::getResponseFromJson(const std::string& jsonResponse) {
     }
     catch (const std::exception& e) {
         log.error("Error parsing JSON: " + std::string(e.what()));
-        std::cerr << "Error parsing JSON: " + std::string(e.what()) << std::endl;
+        std::cerr << "Error parsing JSON: " + \
+            std::string(e.what()) << std::endl;
         return "Error parsing JSON: " + std::string(e.what());
     }
 }
@@ -73,7 +73,7 @@ std::string KoboldClient::sendRequest(const std::string& prompt) {
 
     std::string response;
     std::string escapedPrompt = escapeJsonString(prompt);
-    std::string jsonData = R"({"prompt": ")" + escapedPrompt + R"(", "max_length": 100})"; // JSON-запрос к KoboldCpp
+    std::string jsonData = R"({"prompt": ")" + escapedPrompt + R"(", "max_length": 100})";  // JSON-запрос к KoboldCpp
 
     log.info("Sending request to AI: " + jsonData);
 
@@ -89,8 +89,10 @@ std::string KoboldClient::sendRequest(const std::string& prompt) {
 
     CURLcode res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
-        log.error("cURL request failed: " + std::string(curl_easy_strerror(res)));
-        std::cerr << "cURL request failed: " + std::string(curl_easy_strerror(res)) << std::endl;
+        log.error("cURL request failed: " + \
+            std::string(curl_easy_strerror(res)));
+        std::cerr << "cURL request failed: " + \
+            std::string(curl_easy_strerror(res)) << std::endl;
     }
 
     curl_slist_free_all(headers);

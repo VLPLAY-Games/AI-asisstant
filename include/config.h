@@ -1,11 +1,14 @@
-﻿#pragma once
+﻿  //  Copyright MIT License 2025 VL_PLAY Games
+
+
+#pragma once
 #ifndef CONFIG_H
 #define CONFIG_H
 
 #include <string>
 
 class Config {
-public:
+ public:
     // Объявление статических переменных
     static std::string app_name;
     static std::string app_version;
@@ -21,9 +24,9 @@ public:
     // Метод для загрузки конфигурации из файла
     static bool loadConfig(const std::string& filepath);
 
-private:
+ private:
     // Вспомогательная функция для обработки строки конфигурации
     static void parseLine(const std::string& line);
 };
 
-#endif // CONFIG_H
+#endif  // CONFIG_H

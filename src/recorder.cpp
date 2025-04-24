@@ -1,10 +1,14 @@
-﻿#include "../include/recorder.h"
+﻿  //  Copyright MIT License 2025 VL_PLAY Games
+
+
+#include "../include/recorder.h"
 #include <iostream>
 #include <fstream>
 #include <cmath>
 #include <vector>
 #include <algorithm>
 #include <windows.h>
+#include <string>
 
 #define SAMPLE_RATE 16000
 #define FRAMES_PER_BUFFER 512
@@ -139,7 +143,8 @@ void Recorder::listAvailableMicrophones() const {
     int numDevices = Pa_GetDeviceCount();
 
     if (numDevices < 0) {
-        std::cerr << "ERROR: Pa_GetDeviceCount returned " << numDevices << std::endl;
+        std::cerr << "ERROR: Pa_GetDeviceCount returned " \
+            << numDevices << std::endl;
         return;
     }
 

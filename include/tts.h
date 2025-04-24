@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿  //  Copyright MIT License 2025 VL_PLAY Games
+
+
+#pragma once
 #ifndef TTS_H
 #define TTS_H
 
@@ -10,7 +13,7 @@
 #pragma comment(lib, "sapi.lib")
 
 class TextToSpeech {
-public:
+ public:
     // Конструктор с объектом Log
     TextToSpeech(Log& log);
 
@@ -20,9 +23,9 @@ public:
     // Метод для воспроизведения текста
     void speak(const std::wstring& text);
 
-private:
+ private:
     bool initialized;  // Флаг успешной инициализации
     Log& log;         // Ссылка на объект Log для записи в лог
 };
 
-#endif // TTS_H
+#endif  // TTS_H

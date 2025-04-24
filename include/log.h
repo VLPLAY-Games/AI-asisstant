@@ -1,13 +1,17 @@
-﻿#pragma once
+﻿  //  Copyright MIT License 2025 VL_PLAY Games
+
+
+#pragma once
 #ifndef LOG_H
 #define LOG_H
 
 #include <fstream>
 #include <string>
-#include <ctime> // Добавляем для работы с временем
+#include <ctime>
+#include <cstdio>
 
 class Log {
-public:
+ public:
     Log(const std::string& log_path);
     void close_log();
     ~Log();
@@ -17,7 +21,7 @@ public:
     void error(const std::string& text);
     void critical(const std::string& text);
 
-private:
+ private:
     std::string log_path;
     FILE* log_file;
 
@@ -25,4 +29,4 @@ private:
     std::string getCurrentTime();
 };
 
-#endif // LOG_H
+#endif  // LOG_H

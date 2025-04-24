@@ -1,10 +1,15 @@
-﻿#pragma once
+﻿  //  Copyright MIT License 2025 VL_PLAY Games
+
+
+#pragma once
+#ifndef RECORDER_H
+#define RECORDER_H
 #include <string>
 #include <vector>
 #include <portaudio.h>
 
 class Recorder {
-public:
+ public:
     Recorder();
     ~Recorder();
 
@@ -15,7 +20,9 @@ public:
     bool record(const std::string& wavPath, int silenceThreshold);
     void listAvailableMicrophones() const;
 
-private:
+ private:
     std::string microphone_name;
     PaDeviceIndex findInputDeviceByName(const std::string& name);
 };
+
+#endif
