@@ -1,14 +1,13 @@
-﻿  //  Copyright MIT License 2025 VL_PLAY Games
-
-
+﻿// config.h
 #pragma once
 #ifndef CONFIG_H
 #define CONFIG_H
 
 #include <string>
+#include <map>
 
 class Config {
- public:
+public:
     // Объявление статических переменных
     static std::string app_name;
     static std::string app_version;
@@ -24,9 +23,18 @@ class Config {
     // Метод для загрузки конфигурации из файла
     static bool loadConfig(const std::string& filepath);
 
- private:
+    // Метод для быстрого изменения параметра в конфиг-файле
+    static bool updateConfig(const std::string& filepath,
+        const std::string& parameter,
+        const std::string& value);
+
+private:
     // Вспомогательная функция для обработки строки конфигурации
     static void parseLine(const std::string& line);
+
+    // Вспомогательная функция для сохранения конфига
+    static bool saveConfig(const std::string& filepath,
+        const std::map<std::string, std::string>& configMap);
 };
 
 #endif  // CONFIG_H
