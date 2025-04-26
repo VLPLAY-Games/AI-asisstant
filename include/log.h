@@ -20,6 +20,7 @@ class Log {
     void warning(const std::string& text);
     void error(const std::string& text);
     void critical(const std::string& text);
+    void clear();
 
  private:
     std::string log_path;

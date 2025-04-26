@@ -14,6 +14,7 @@
 #include "include/kobold_client.h"
 
 int main() {
+
     // Загрузка конфигурации
     if (!Config::loadConfig("files/config.cfg")) {
         std::cerr << "Failed to load configuration. Exiting.\n";
@@ -54,18 +55,19 @@ int main() {
 
         if (speech != "error" && !speech.empty()) {
             log.info("Speech recognized: " + speech);
-            std::string response = kobold.sendRequest(speech);
-            std::wstring w_response(response.begin(), response.end());
-            tts.speak(w_response);
 
             // Проверка условий завершения
-            std::transform(speech.begin(), speech.end(), \
+            auto check_speech = std::transform(speech.begin(), speech.end(), \
                 speech.begin(), ::tolower);
             if (speech.find("stop") != std::string::npos || \
                 speech.find("exit") != std::string::npos) {
                 log.info("Stop/Exit command detected. Exiting loop.");
                 break;
             }
+
+            std::string response = kobold.sendRequest(speech);
+            std::wstring w_response(response.begin(), response.end());
+            tts.speak(w_response);
         }
         else log.error("Recognition error or empty result");
     }

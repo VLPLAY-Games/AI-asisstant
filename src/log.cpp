@@ -14,9 +14,6 @@
 Log::Log(const std::string& log_path)
     : log_path(log_path) {
     log_file = fopen(log_path.c_str(), "a+");
-    if (!log_file) {
-        std::cerr << "Failed to open log file: " << log_path << std::endl;
-    }
     fclose(log_file);
 }
 
@@ -74,5 +71,11 @@ void Log::critical(const std::string& text) {
     std::string logEntry = "[" + getCurrentTime() + "] [CRITICAL] " + \
         text + "\n";
     fputs(logEntry.c_str(), log_file);
+    fclose(log_file);
+}
+
+void Log::clear() {
+    remove(log_path.c_str());
+    log_file = fopen(log_path.c_str(), "a+");
     fclose(log_file);
 }
