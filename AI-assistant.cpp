@@ -12,7 +12,7 @@
 #include "include/recognizer.h"
 #include "include/tts.h"
 #include "include/kobold_client.h"
-#include "device_connection.h"
+#include "include/device_connection.h"
 
 int main() {
 

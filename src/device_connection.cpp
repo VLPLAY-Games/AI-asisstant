@@ -2,7 +2,7 @@
 
 
 
-#include "device_connection.h"
+#include "../include/device_connection.h"
 
 DC::DC(){
 }

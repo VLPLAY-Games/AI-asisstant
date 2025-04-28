@@ -14,8 +14,15 @@ Recognizer::Recognizer(const std::string& whisperPath, \
 }
 
 std::string Recognizer::recognize(const std::string& filename) {
-    std::string command = whisperPath + " -m \"" + modelPath + "\" -f \"" + \
-        filename + "\" --language en --output-txt --no-prints";
+    remove((filename + ".txt").c_str());
+
+    std::ofstream temp;
+    temp.open(filename + ".txt");
+    temp.close();
+
+    std::string command = whisperPath + " -m \"" + modelPath + "\" -f \"" +
+        filename + "\" --language en --output-txt --no-prints " +
+        "--suppress-nst";
     std::system(command.c_str());
 
     std::ifstream file(filename + ".txt");
