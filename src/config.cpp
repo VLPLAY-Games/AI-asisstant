@@ -17,6 +17,9 @@ int Config::silence_db = 0;
 std::string Config::whisper_cli_path = "";
 std::string Config::whisper_model_path = "";
 std::string Config::koboldcpp_link = "";
+std::string Config::koboldcpp_path = "";
+std::string Config::koboldcpp_cfg_path = "";
+std::string Config::koboldcpp_model_path = "";
 
 bool Config::loadConfig(const std::string& filepath) {
     std::ifstream configFile(filepath);
@@ -117,6 +120,10 @@ void Config::parseLine(const std::string& line) {
         else if (key == "whisper_cli_path") whisper_cli_path = value;
         else if (key == "whisper_model_path") whisper_model_path = value;
         else if (key == "koboldcpp_link") koboldcpp_link = value;
+
+        else if (key == "koboldcpp_path") koboldcpp_path = value;
+        else if (key == "koboldcpp_cfg_path") koboldcpp_cfg_path = value;
+        else if (key == "koboldcpp_model_path") koboldcpp_model_path = value;
         else std::cerr << "Warning: Unknown config key: " << key << std::endl;
     }
 }

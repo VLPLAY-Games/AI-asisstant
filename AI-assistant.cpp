@@ -41,7 +41,7 @@ int main() {
     TextToSpeech tts(log);
 
     log.info("Initializing koboldcpp...");
-    KoboldClient kobold(Config::koboldcpp_link, log);
+    KoboldClient kobold(Config::koboldcpp_link, Config::koboldcpp_path, Config::koboldcpp_cfg_path, Config::koboldcpp_model_path, log);
 
     // Основной цикл
     while (true) {

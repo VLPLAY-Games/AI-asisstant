@@ -19,6 +19,9 @@ public:
     static std::string whisper_cli_path;
     static std::string whisper_model_path;
     static std::string koboldcpp_link;
+    static std::string koboldcpp_path;
+    static std::string koboldcpp_cfg_path;
+    static std::string koboldcpp_model_path;
 
     // Метод для загрузки конфигурации из файла
     static bool loadConfig(const std::string& filepath);
