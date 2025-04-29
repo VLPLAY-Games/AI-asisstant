@@ -79,6 +79,47 @@ std::vector<std::string> DC::getDiscoveredDevices() {
     return discoveredDevices;
 }
 
+bool DC::sendCommand(const std::string& ip, const std::string& command, int port) {
+    SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sock == INVALID_SOCKET) {
+        std::cerr << "Cannot create Socket\n";
+        return false;
+    }
+
+    sockaddr_in addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = inet_addr(ip.c_str());
+
+    if (connect(sock, (sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR) {
+        std::cerr << "Cannot connect to " << ip << " on port " << port << std::endl;
+        closesocket(sock);
+        return false;
+    }
+
+    int sent = send(sock, command.c_str(), static_cast<int>(command.length()), 0);
+    if (sent == SOCKET_ERROR) {
+        std::cerr << "Error while sending command\n";
+        closesocket(sock);
+        return false;
+    }
+
+    std::cout << "Command send to " << ip << ": " << command << std::endl;
+    // Приём ответа
+    char buffer[1024]{};
+    int received = recv(sock, buffer, sizeof(buffer) - 1, 0);
+    if (received > 0) {
+        buffer[received] = '\0';
+        std::cout << "Received from " << ip << ": " << buffer << std::endl;
+    }
+    else {
+        std::cout << "Answer from " << ip << " not received or empty.\n";
+    }
+
+    closesocket(sock);
+    return true;
+}
+
 
 // Использование
 //

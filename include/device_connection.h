@@ -15,6 +15,7 @@ public:
 
     void scanLocalNetwork(const std::string& base_ip, int port, int threads = 10);
     std::vector<std::string> getDiscoveredDevices();
+    bool sendCommand(const std::string& ip, const std::string& command, int port);
 
 private:
     bool isPortOpen(const std::string& ip, int port);
