@@ -16,7 +16,7 @@ std::mutex cout_mutex;
 DC::DC() {
     WSAData wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        std::cerr << "Ошибка WSAStartup\n";
+        std::cerr << "Error with WSAStartup\n";
     }
 }
 
@@ -53,7 +53,7 @@ void DC::scanRange(const std::string& base_ip, int start, int end, int port) {
                 discoveredDevices.push_back(ip);
             }
             std::lock_guard<std::mutex> lock(cout_mutex);
-            std::cout << "Открыт порт " << port << " на " << ip << std::endl;
+            std::cout << "Open port " << port << " on " << ip << std::endl;
         }
     }
 }
