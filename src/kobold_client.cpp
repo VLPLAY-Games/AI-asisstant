@@ -13,6 +13,9 @@ KoboldClient::KoboldClient(const std::string& server_url, const std::string& exe
     const std::string& cfg_path, const std::string& model_path, Log& log)
     : server_url(server_url), exe_path(exe_path), cfg_path(cfg_path), model_path(model_path), log(log)
 {
+    std::cout << "\n###############################\n";
+    std::cout << "     Initializing KoboldCpp    ";
+    std::cout << "\n###############################\n\n";
     curl_global_init(CURL_GLOBAL_ALL);
 
     std::string command;
@@ -23,20 +26,18 @@ KoboldClient::KoboldClient(const std::string& server_url, const std::string& exe
     if (cfg_file.good()) {
         command = "start /B " + exe_path + " --config \"" + cfg_path + "\"";
         background_mode = true;
-        std::cout << "Launching koboldcpp in background with config file..." << std::endl;
         log.info("Launching koboldcpp in background with config file: " + cfg_path);
     }
     else if (!model_path.empty()) {
         command = "start /B " + exe_path + " \"" + model_path + "\"";
         background_mode = true;
-        std::cout << "Launching koboldcpp in background with model..." << std::endl;
         log.info("Launching koboldcpp in background with model: " + model_path);
     }
     else {
         command = "start " + exe_path;
-        std::cout << "Launching koboldcpp in normal mode (no parameters)..." << std::endl;
         log.warning("Launching koboldcpp in normal mode without parameters");
     }
+
 
     // Запускаем процесс
     int result = system(command.c_str());
@@ -46,21 +47,24 @@ KoboldClient::KoboldClient(const std::string& server_url, const std::string& exe
     }
     else {
         if (background_mode) {
-            std::cout << "Waiting 20 seconds for koboldcpp initialization in background..." << std::endl;
-            log.info("Successfully launched koboldcpp in background, waiting for initialization...");
+            log.info("Successfully launched koboldcpp in background, waiting 20 sec for initialization...");
 
             // Добавляем задержку 20 секунд для инициализации
             for (int i = 20; i > 0; --i) {
-                std::cout << "Waiting... " << i << " seconds remaining" << std::endl;
+                log.info("Waiting... " + std::to_string(i) + " seconds remaining");
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
         }
         else {
-            std::cout << "Koboldcpp launched in normal mode (no waiting needed)" << std::endl;
+            log.info("Koboldcpp launched in normal mode (no waiting needed)");
         }
 
         log.info("KoboldClient initialized with server URL: " + server_url);
         std::cout << "KoboldClient ready to use!" << std::endl;
+
+        std::cout << "\n##############################\n";
+        std::cout << "     Initialized KoboldCpp    ";
+        std::cout << "\n##############################\n\n";
     }
 }
 

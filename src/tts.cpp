@@ -7,6 +7,10 @@
 
 TextToSpeech::TextToSpeech(Log& log)
     : initialized(false), log(log) {
+    std::cout << "\n###############################\n";
+    std::cout << "     Initializing TTS    ";
+    std::cout << "\n###############################\n\n";
+
     // Инициализация COM библиотеки
     if (FAILED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED))) {
         log.error("Failed to initialize COM library.");
@@ -15,6 +19,10 @@ TextToSpeech::TextToSpeech(Log& log)
         initialized = true;
         log.info("TextToSpeech initialized successfully.");
     }
+
+    std::cout << "\n############################\n";
+    std::cout << "     Initialized TTS    ";
+    std::cout << "\n############################\n\n";
 }
 
 TextToSpeech::~TextToSpeech() {

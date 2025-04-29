@@ -11,6 +11,13 @@
 Recognizer::Recognizer(const std::string& whisperPath, \
     const std::string& modelPath)
     : whisperPath(whisperPath), modelPath(modelPath) {
+    std::cout << "\n###############################\n";
+    std::cout << "     Initializing Whisper    ";
+    std::cout << "\n###############################\n\n";
+
+    std::cout << "\n#########################################\n";
+    std::cout << "     Initialized Whisper Successfully    ";
+    std::cout << "\n#########################################\n\n";
 }
 
 std::string Recognizer::recognize(const std::string& filename) {

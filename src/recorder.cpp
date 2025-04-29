@@ -21,7 +21,11 @@ struct RecorderData {
     bool recording = true;
 };
 
-Recorder::Recorder() {}
+Recorder::Recorder() {
+    std::cout << "\n###############################\n";
+    std::cout << "     Initializing PortAudio    ";
+    std::cout << "\n###############################\n\n";
+}
 
 Recorder::~Recorder() {
     Pa_Terminate();
