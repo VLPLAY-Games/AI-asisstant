@@ -40,6 +40,9 @@ int main() {
     log.info("Initializing text-to-speech...");
     TextToSpeech tts(log);
 
+    log.info("Initializing device connection...");
+    DC scanner;
+
     log.info("Initializing koboldcpp...");
     KoboldClient kobold(Config::koboldcpp_link, Config::koboldcpp_path, Config::koboldcpp_cfg_path, Config::koboldcpp_model_path, log);
 
