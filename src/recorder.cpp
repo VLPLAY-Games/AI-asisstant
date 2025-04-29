@@ -1,5 +1,4 @@
-﻿  //  Copyright MIT License 2025 VL_PLAY Games
-
+﻿//  Copyright MIT License 2025 VL_PLAY Games
 
 #include "../include/recorder.h"
 #include <iostream>
@@ -7,7 +6,11 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#ifdef _WIN32
 #include <windows.h>
+#else
+#include <unistd.h>
+#endif
 #include <string>
 
 #define SAMPLE_RATE 16000
@@ -83,6 +86,7 @@ bool Recorder::record(const std::string& wavPath, int silenceThreshold) {
     PaDeviceIndex deviceIndex = findInputDeviceByName(microphone_name);
     if (deviceIndex == paNoDevice) {
         std::cerr << "Microphone not found: " << microphone_name << std::endl;
+        Pa_Terminate();
         return false;
     }
 
@@ -100,6 +104,7 @@ bool Recorder::record(const std::string& wavPath, int silenceThreshold) {
         FRAMES_PER_BUFFER, paClipOff, recordCallback, &data);
     if (err != paNoError) {
         std::cerr << "Failed to open stream: " << Pa_GetErrorText(err) << std::endl;
+        Pa_Terminate();
         return false;
     }
 
@@ -111,7 +116,7 @@ bool Recorder::record(const std::string& wavPath, int silenceThreshold) {
     Pa_CloseStream(stream);
     Pa_Terminate();
 
-    // Save to .wav
+    // Save to .wav file
     std::ofstream file(wavPath, std::ios::binary);
     int32_t dataChunkSize = data.recordedSamples.size() * sizeof(int16_t);
     int32_t chunkSize = 36 + dataChunkSize;

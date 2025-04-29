@@ -1,28 +1,69 @@
-﻿//#define _WINSOCK_DEPRECATED_NO_WARNINGS
+﻿//#ifdef _WIN32
+//#define _WINSOCK_DEPRECATED_NO_WARNINGS
 //#include <winsock2.h>
-//#include <iostream>
-//
+//#include <ws2tcpip.h>
+//#include <windows.h>
 //#pragma comment(lib, "ws2_32.lib")
+//#else
+//#include <sys/socket.h>
+//#include <netinet/in.h>
+//#include <unistd.h>
+//#include <arpa/inet.h>
+//#include <string.h>
+//#define INVALID_SOCKET (-1)
+//#define SOCKET_ERROR (-1)
+//typedef int SOCKET;
+//#endif
+//
+//#include <iostream>
+//#include <string>
 //
 //int main() {
+//#ifdef _WIN32
 //    WSADATA wsaData;
-//    WSAStartup(MAKEWORD(2, 2), &wsaData);
+//    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+//        std::cerr << "WSAStartup failed.\n";
+//        return 1;
+//    }
+//#endif
 //
-//    SOCKET listenSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+//    SOCKET listenSock = socket(AF_INET, SOCK_STREAM, 0);
 //    if (listenSock == INVALID_SOCKET) {
-//        std::cerr << "Cannot create Socket\n";
+//        std::cerr << "Cannot create socket\n";
+//#ifdef _WIN32
+//        WSACleanup();
+//#endif
 //        return 1;
 //    }
 //
 //    sockaddr_in addr{};
 //    addr.sin_family = AF_INET;
 //    addr.sin_addr.s_addr = INADDR_ANY;
-//    addr.sin_port = htons(50505); // Порт сервера
+//    addr.sin_port = htons(50505);
 //
-//    bind(listenSock, (sockaddr*)&addr, sizeof(addr));
-//    listen(listenSock, SOMAXCONN);
+//    if (bind(listenSock, (sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR) {
+//        std::cerr << "Bind failed\n";
+//#ifdef _WIN32
+//        closesocket(listenSock);
+//        WSACleanup();
+//#else
+//        close(listenSock);
+//#endif
+//        return 1;
+//    }
 //
-//    std::cout << "Server is listening port 50505...\n";
+//    if (listen(listenSock, SOMAXCONN) == SOCKET_ERROR) {
+//        std::cerr << "Listen failed\n";
+//#ifdef _WIN32
+//        closesocket(listenSock);
+//        WSACleanup();
+//#else
+//        close(listenSock);
+//#endif
+//        return 1;
+//    }
+//
+//    std::cout << "Server is listening on port 50505...\n";
 //
 //    while (true) {
 //        SOCKET clientSock = accept(listenSock, nullptr, nullptr);
@@ -39,10 +80,19 @@
 //            send(clientSock, response.c_str(), static_cast<int>(response.length()), 0);
 //        }
 //
+//#ifdef _WIN32
 //        closesocket(clientSock);
+//#else
+//        close(clientSock);
+//#endif
 //    }
 //
+//#ifdef _WIN32
 //    closesocket(listenSock);
 //    WSACleanup();
+//#else
+//    close(listenSock);
+//#endif
+//
 //    return 0;
 //}

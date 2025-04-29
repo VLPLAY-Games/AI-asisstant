@@ -23,6 +23,10 @@ private:
 
     std::vector<std::string> discoveredDevices;
     std::mutex deviceMutex;
+
+#ifdef _WIN32
+    void initWinsock();
+#endif
 };
 
 #endif

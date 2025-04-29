@@ -1,31 +1,34 @@
-﻿  //  Copyright MIT License 2025 VL_PLAY Games
-
+﻿//  Copyright MIT License 2025 VL_PLAY Games
 
 #pragma once
 #ifndef TTS_H
 #define TTS_H
 
-#include <sapi.h>
-#include <iostream>
 #include <string>
 #include "log.h"
 
+#ifdef _WIN32
+#include <sapi.h>
 #pragma comment(lib, "sapi.lib")
+#endif
 
 class TextToSpeech {
- public:
-    // Конструктор с объектом Log
+public:
     TextToSpeech(Log& log);
-
-    // Деструктор
     ~TextToSpeech();
 
-    // Метод для воспроизведения текста
     void speak(const std::wstring& text);
 
- private:
-    bool initialized;  // Флаг успешной инициализации
-    Log& log;         // Ссылка на объект Log для записи в лог
+private:
+    bool initialized;
+    Log& log;
+
+#ifdef _WIN32
+    // Windows-specific
+#else
+    // Linux-specific
+    std::wstring escapeForShell(const std::wstring& input);
+#endif
 };
 
 #endif  // TTS_H

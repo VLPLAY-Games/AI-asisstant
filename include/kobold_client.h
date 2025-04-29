@@ -1,5 +1,4 @@
-﻿  //  Copyright MIT License 2025 VL_PLAY Games
-
+﻿// Copyright MIT License 2025 VL_PLAY Games
 
 #pragma once
 #ifndef KOBOLD_CLIENT_H
@@ -13,10 +12,19 @@
 #include <nlohmann/json.hpp>
 #include "log.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#include <shellapi.h>
+#else
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#endif
+
 using json = nlohmann::json;
 
 class KoboldClient {
- public:
+public:
     // Конструктор с параметром URL сервера и объектом Log
     explicit KoboldClient(const std::string& server_url, const std::string& exe_path, \
         const std::string& cfg_path, const std::string& model_path, Log& log);
@@ -33,7 +41,7 @@ class KoboldClient {
     // Метод для отправки запроса к серверу KoboldCpp
     std::string sendRequest(const std::string& prompt);
 
- private:
+private:
     std::string server_url;  // URL сервера KoboldCpp
     std::string exe_path;
     std::string cfg_path;

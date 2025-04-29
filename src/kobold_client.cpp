@@ -1,11 +1,8 @@
-﻿  //  Copyright MIT License 2025 VL_PLAY Games
-
+﻿// Copyright MIT License 2025 VL_PLAY Games
 
 #include "../include/kobold_client.h"
 #include <iostream>
 #include <string>
-#include <windows.h>
-#include <shellapi.h>
 #include <chrono>
 #include <thread>
 
@@ -21,6 +18,8 @@ KoboldClient::KoboldClient(const std::string& server_url, const std::string& exe
     std::string command;
     bool background_mode = false;
 
+#ifdef _WIN32
+    // Windows специфичная логика
     // Проверяем существование конфиг файла
     std::ifstream cfg_file(cfg_path);
     if (cfg_file.good()) {
@@ -37,7 +36,6 @@ KoboldClient::KoboldClient(const std::string& server_url, const std::string& exe
         command = "start " + exe_path;
         log.warning("Launching koboldcpp in normal mode without parameters");
     }
-
 
     // Запускаем процесс
     int result = system(command.c_str());
@@ -66,8 +64,48 @@ KoboldClient::KoboldClient(const std::string& server_url, const std::string& exe
         std::cout << "     Initialized KoboldCpp    ";
         std::cout << "\n##############################\n\n";
     }
-}
 
+#else
+    // Linux специфичная логика
+    pid_t pid = fork();
+    if (pid == 0) {
+        // В дочернем процессе
+        if (!cfg_path.empty()) {
+            execlp(exe_path.c_str(), exe_path.c_str(), "--config", cfg_path.c_str(), (char*)NULL);
+        }
+        else if (!model_path.empty()) {
+            execlp(exe_path.c_str(), exe_path.c_str(), model_path.c_str(), (char*)NULL);
+        }
+        else {
+            execlp(exe_path.c_str(), exe_path.c_str(), (char*)NULL);
+        }
+        // Если execlp возвращает, то произошла ошибка
+        std::cerr << "Failed to execute koboldcpp on Linux!" << std::endl;
+        log.error("Failed to execute koboldcpp on Linux.");
+        exit(1);
+    }
+    else if (pid > 0) {
+        // В родительском процессе
+        log.info("Koboldcpp launched on Linux, waiting 20 sec for initialization...");
+        // Добавляем задержку 20 секунд для инициализации
+        for (int i = 20; i > 0; --i) {
+            log.info("Waiting... " + std::to_string(i) + " seconds remaining");
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    }
+    else {
+        std::cerr << "Fork failed!" << std::endl;
+        log.error("Fork failed to launch koboldcpp on Linux.");
+    }
+#endif
+
+    log.info("KoboldClient initialized with server URL: " + server_url);
+    std::cout << "KoboldClient ready to use!" << std::endl;
+
+    std::cout << "\n##############################\n";
+    std::cout << "     Initialized KoboldCpp    ";
+    std::cout << "\n##############################\n\n";
+}
 
 KoboldClient::~KoboldClient() {
     curl_global_cleanup();
@@ -85,13 +123,9 @@ std::string KoboldClient::escapeJsonString(const std::string& str) {
     std::string escapedStr;
     for (char c : str) {
         if (c == '"') escapedStr += "\\\"";  // Экранирование кавычек
-
         else if (c == '\\') escapedStr += "\\\\";  // обратного слэша
-
         else if (c == '\n') escapedStr += "\\n";  // новой строки
-
         else if (c == '\t') escapedStr += "\\t";  // табуляции
-
         else escapedStr += c;  // Оставляем остальные символы
     }
     return escapedStr;
@@ -160,3 +194,4 @@ std::string KoboldClient::sendRequest(const std::string& prompt) {
 
     return getResponseFromJson(response);
 }
+
