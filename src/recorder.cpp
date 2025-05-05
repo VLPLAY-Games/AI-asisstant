@@ -167,3 +167,4 @@ void Recorder::listAvailableMicrophones() const {
 
     Pa_Terminate();
 }
+

@@ -41,10 +41,10 @@ int main() {
     TextToSpeech tts(log);
 
     log.info("Initializing device connection...");
-    DC scanner;
+    DC scanner(log);
 
     log.info("Initializing koboldcpp...");
-    KoboldClient kobold(Config::koboldcpp_link, Config::koboldcpp_path, Config::koboldcpp_cfg_path, Config::koboldcpp_model_path, log);
+    // KoboldClient kobold(Config::koboldcpp_link, Config::koboldcpp_path, Config::koboldcpp_cfg_path, Config::koboldcpp_model_path, log);
 
     // Основной цикл
     while (true) {
@@ -60,25 +60,50 @@ int main() {
         if (speech != "error" && !speech.empty()) {
             log.info("Speech recognized: " + speech);
 
+            // Преобразуем в нижний регистр
+            std::transform(speech.begin(), speech.end(), speech.begin(), ::tolower);
+            speech.erase(0, 1);
+
             // Проверка условий завершения
-            auto check_speech = std::transform(speech.begin(), speech.end(), \
-                speech.begin(), ::tolower);
-            if (speech.find("stop") != std::string::npos || \
-                speech.find("exit") != std::string::npos) {
+            if (speech.find("stop") != std::string::npos || speech.find("exit") != std::string::npos) {
                 log.info("Stop/Exit command detected. Exiting loop.");
                 break;
             }
 
-            std::string response = kobold.sendRequest(speech);
-            std::wstring w_response(response.begin(), response.end());
-            tts.speak(w_response);
+            // Обработка команды "send to"
+            std::cout << speech;
+            if (speech.starts_with("send to device")) {
+                std::string remote_command = speech.substr(15);  // пропустить "send to device"
+                std::string target_ip = "";        // Заданный IP
+
+                log.info("Sending remote command to " + target_ip + ": " + remote_command);
+
+                if (scanner.sendCommand(target_ip, remote_command, 50505)) {
+                    log.info("Command sent successfully to " + target_ip);
+                }
+                else {
+                    log.warning("Failed to send command to " + target_ip);
+                }
+
+                continue; // skip local response if it's a remote command
+            }
+            //else {
+            //    // Стандартный путь общения через kobold и TTS
+            //    std::string response = kobold.sendRequest(speech);
+            //    std::wstring w_response(response.begin(), response.end());
+            //    tts.speak(w_response);
+            //}
+
+            
         }
-        else log.error("Recognition error or empty result");
+        else {
+            log.error("Recognition error or empty result");
+        }
     }
+
 
     log.info("Program closed");
     log.info("=========================================================");
     log.close_log();
     return 0;
 }
-
