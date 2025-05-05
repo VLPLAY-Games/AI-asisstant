@@ -101,8 +101,14 @@ int main() {
 
                 log.info("Sending remote command to device #" + std::to_string(deviceIndex + 1));
 
-                if (scanner.sendCommand(deviceIndex, remote_command, Config::dc_port)) {
+                std::string response = scanner.sendCommand(deviceIndex, remote_command, Config::dc_port);
+
+                if (response != "0") {
                     log.info("Command sent successfully to device #" + std::to_string(deviceIndex + 1));
+                    log.info("Device response: " + response);
+                    response = "Device response: " + response;
+                    std::wstring w_response(response.begin(), response.end());
+                    tts.speak(w_response);
                 }
                 else {
                     log.warning("Failed to send command to device #" + std::to_string(deviceIndex + 1));
@@ -128,4 +134,3 @@ int main() {
     log.close_log();
     return 0;
 }
-

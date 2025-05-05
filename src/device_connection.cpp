@@ -9,6 +9,7 @@
 #include <thread>
 #include <sstream>
 #include <optional>
+#include <string>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -146,16 +147,16 @@ bool DC::isPortOpen(const std::string& ip, int port) {
 }
 
 
-bool DC::sendCommand(int deviceIndex, const std::string& command, int port) {
+std::string DC::sendCommand(int deviceIndex, const std::string& command, int port) {
     std::lock_guard<std::mutex> lock(deviceMutex);
     if (discoveredDevices.empty()) {
         log.error("No discovered devices available.");
-        return false;
+        return "0";
     }
 
     if (deviceIndex < 0 || deviceIndex >= static_cast<int>(discoveredDevices.size())) {
         log.error("Invalid device index: " + std::to_string(deviceIndex));
-        return false;
+        return "0";
     }
 
     const std::string& target_ip = discoveredDevices[deviceIndex];
@@ -166,12 +167,12 @@ bool DC::sendCommand(int deviceIndex, const std::string& command, int port) {
     if (!response.empty()) {
         // Дополнительная логика, если ответ получен
         log.info("Command executed successfully. Response: " + response);
-        return true;
+        return response;
     }
 
     // Если ответ пустой или ошибка
     log.error("Command execution failed.");
-    return false;
+    return "0";
 }
 
 
