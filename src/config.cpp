@@ -20,6 +20,8 @@ std::string Config::koboldcpp_link = "";
 std::string Config::koboldcpp_path = "";
 std::string Config::koboldcpp_cfg_path = "";
 std::string Config::koboldcpp_model_path = "";
+std::string Config::dc_subnet = "";
+int Config::dc_port = 0;
 
 bool Config::loadConfig(const std::string& filepath) {
     std::ifstream configFile(filepath);
@@ -124,6 +126,8 @@ void Config::parseLine(const std::string& line) {
         else if (key == "koboldcpp_path") koboldcpp_path = value;
         else if (key == "koboldcpp_cfg_path") koboldcpp_cfg_path = value;
         else if (key == "koboldcpp_model_path") koboldcpp_model_path = value;
+        else if (key == "dc_subnet") dc_subnet = value;
+        else if (key == "dc_port") dc_port = std::stoi(value);
         else std::cerr << "Warning: Unknown config key: " << key << std::endl;
     }
 }

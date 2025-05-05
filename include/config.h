@@ -8,7 +8,7 @@
 
 class Config {
 public:
-    // Объявление статических переменных
+    // Статические переменные конфигурации
     static std::string app_name;
     static std::string app_version;
     static std::string microphone;
@@ -23,19 +23,17 @@ public:
     static std::string koboldcpp_cfg_path;
     static std::string koboldcpp_model_path;
 
-    // Метод для загрузки конфигурации из файла
-    static bool loadConfig(const std::string& filepath);
+    static std::string dc_subnet;  // e.g. "192.168.0."
+    static int dc_port;            // e.g. 50505
 
-    // Метод для быстрого изменения параметра в конфиг-файле
+    // Методы конфигурации
+    static bool loadConfig(const std::string& filepath);
     static bool updateConfig(const std::string& filepath,
         const std::string& parameter,
         const std::string& value);
 
 private:
-    // Вспомогательная функция для обработки строки конфигурации
     static void parseLine(const std::string& line);
-
-    // Вспомогательная функция для сохранения конфига
     static bool saveConfig(const std::string& filepath,
         const std::map<std::string, std::string>& configMap);
 };

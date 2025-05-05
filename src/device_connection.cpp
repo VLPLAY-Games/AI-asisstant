@@ -75,9 +75,20 @@ void DC::scanRange(const std::string& base_ip, int start, int end, int port) {
         std::string ip = ipStream.str();
 
         if (isPortOpen(ip, port)) {
-            std::lock_guard<std::mutex> lock(deviceMutex);
-            discoveredDevices.push_back(ip);
-            log.info("Discovered device at " + ip + ":" + std::to_string(port));
+            // Отправка команды "Connected requested" и ожидание ответа
+            log.info("Sending connection request to " + ip + ":" + std::to_string(port));
+            std::string response = getResponseFromDevice(ip, port, "Connected requested");
+
+            // Если ответ "Connection accepted", добавляем устройство в массив
+            std::cout << response;
+            if (response == "SUCCESS: Connection accepted") {
+                std::lock_guard<std::mutex> lock(deviceMutex);
+                discoveredDevices.push_back(ip);
+                log.info("Discovered and accepted device at " + ip + ":" + std::to_string(port));
+            }
+            else {
+                log.warning("Connection to " + ip + " declined or failed.");
+            }
         }
     }
 }
@@ -89,52 +100,97 @@ bool DC::isPortOpen(const std::string& ip, int port) {
         return false;
     }
 
+    // Установка неблокирующего режима
+#ifdef _WIN32
+    u_long mode = 1;
+    ioctlsocket(sock, FIONBIO, &mode);
+#else
+    fcntl(sock, F_SETFL, O_NONBLOCK);
+#endif
+
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = inet_addr(ip.c_str());
 
-    // Set timeout
-#ifdef _WIN32
-    DWORD timeout = 300;
-    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
-#else
-    struct timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 300000;
-    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-#endif
+    connect(sock, (sockaddr*)&addr, sizeof(addr)); // Будет EINPROGRESS или WSAEWOULDBLOCK
 
-    bool result = connect(sock, (sockaddr*)&addr, sizeof(addr)) != SOCKET_ERROR;
-    if (result) {
-        log.info("Port " + std::to_string(port) + " is open on " + ip);
-    }
-    else {
-        log.warning("Port " + std::to_string(port) + " is closed on " + ip);
+    fd_set writefds;
+    FD_ZERO(&writefds);
+    FD_SET(sock, &writefds);
+
+    timeval timeout{};
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 30000; // 30 мс
+
+    bool isConnected = false;
+
+    int sel = select(static_cast<int>(sock + 1), nullptr, &writefds, nullptr, &timeout);
+    if (sel > 0 && FD_ISSET(sock, &writefds)) {
+        int err = 0;
+#ifdef _WIN32
+        int len = sizeof(err);
+#else
+        socklen_t len = sizeof(err);
+#endif
+        getsockopt(sock, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&err), &len);
+        if (err == 0) {
+            isConnected = true;
+            log.info("Port " + std::to_string(port) + " is open on " + ip);
+        }
     }
 
     closesocket(sock);
-    return result;
+
+    return isConnected;
 }
 
-bool DC::sendCommand(const std::string& ip, const std::string& command, int port) {
-    log.info("Sending command to " + ip + ":" + std::to_string(port) + " -> " + command);
 
+bool DC::sendCommand(int deviceIndex, const std::string& command, int port) {
+    std::lock_guard<std::mutex> lock(deviceMutex);
+    if (discoveredDevices.empty()) {
+        log.error("No discovered devices available.");
+        return false;
+    }
+
+    if (deviceIndex < 0 || deviceIndex >= static_cast<int>(discoveredDevices.size())) {
+        log.error("Invalid device index: " + std::to_string(deviceIndex));
+        return false;
+    }
+
+    const std::string& target_ip = discoveredDevices[deviceIndex];
+    log.info("Sending command to device #" + std::to_string(deviceIndex + 1) + " at " + target_ip + ":" + std::to_string(port) + " -> " + command);
+
+    // Получаем ответ от устройства
+    std::string response = getResponseFromDevice(target_ip, port, command);
+    if (!response.empty()) {
+        // Дополнительная логика, если ответ получен
+        log.info("Command executed successfully. Response: " + response);
+        return true;
+    }
+
+    // Если ответ пустой или ошибка
+    log.error("Command execution failed.");
+    return false;
+}
+
+
+std::string DC::getResponseFromDevice(const std::string& target_ip, int port, const std::string& command) {
     SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == INVALID_SOCKET) {
         log.error("Socket creation failed");
-        return false;
+        return "";
     }
 
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
-    addr.sin_addr.s_addr = inet_addr(ip.c_str());
+    addr.sin_addr.s_addr = inet_addr(target_ip.c_str());
 
     if (connect(sock, (sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR) {
-        log.error("Connection failed to " + ip + ":" + std::to_string(port));
+        log.error("Connection failed to " + target_ip + ":" + std::to_string(port));
         closesocket(sock);
-        return false;
+        return "";
     }
 
     send(sock, command.c_str(), static_cast<int>(command.size()), 0);
@@ -143,14 +199,15 @@ bool DC::sendCommand(const std::string& ip, const std::string& command, int port
     int received = recv(sock, buffer, sizeof(buffer) - 1, 0);
     if (received > 0) {
         buffer[received] = '\0';
-        log.info("Response from " + ip + ": " + std::string(buffer));
+        log.info("Response from " + target_ip + ": " + std::string(buffer));
+        closesocket(sock);
+        return std::string(buffer);
     }
     else {
-        log.warning("No response from " + ip);
+        log.warning("No response from " + target_ip);
+        closesocket(sock);
+        return "";
     }
-
-    closesocket(sock);
-    return true;
 }
 
 std::vector<std::string> DC::getDiscoveredDevices() {
@@ -158,17 +215,3 @@ std::vector<std::string> DC::getDiscoveredDevices() {
     log.info("Returning list of " + std::to_string(discoveredDevices.size()) + " discovered devices.");
     return discoveredDevices;
 }
-
-
-
-
-// Использование
-//
-// DC scanner;
-// scanner.scanLocalNetwork("192.168.1.", 50505);
-//
-// auto devices = scanner.getDiscoveredDevices();
-// std::cout << "\nFound devices:\n";
-// for (const auto& ip : devices) {
-//     std::cout << ip << std::endl;
-// }

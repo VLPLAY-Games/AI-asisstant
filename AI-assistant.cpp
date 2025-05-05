@@ -42,10 +42,11 @@ int main() {
 
     log.info("Initializing device connection...");
     DC scanner(log);
+    scanner.scanLocalNetwork(Config::dc_subnet, Config::dc_port);
 
     log.info("Initializing koboldcpp...");
-    // KoboldClient kobold(Config::koboldcpp_link, Config::koboldcpp_path, Config::koboldcpp_cfg_path, Config::koboldcpp_model_path, log);
-
+    KoboldClient kobold(Config::koboldcpp_link, Config::koboldcpp_path, Config::koboldcpp_cfg_path, Config::koboldcpp_model_path, log);
+    
     // Основной цикл
     while (true) {
         log.info("Recording...");
@@ -71,30 +72,50 @@ int main() {
             }
 
             // Обработка команды "send to"
-            std::cout << speech;
             if (speech.starts_with("send to device")) {
-                std::string remote_command = speech.substr(15);  // пропустить "send to device"
-                std::string target_ip = "";        // Заданный IP
+                std::string remote_command = speech.substr(15);  // после "send to device"
+                auto devices = scanner.getDiscoveredDevices();
 
-                log.info("Sending remote command to " + target_ip + ": " + remote_command);
+                if (devices.empty()) {
+                    log.warning("No devices discovered.");
+                    continue;
+                }
 
-                if (scanner.sendCommand(target_ip, remote_command, 50505)) {
-                    log.info("Command sent successfully to " + target_ip);
+                int deviceIndex = 0;  // По умолчанию — первый
+
+                // Пример: "send to 2 device turn on light"
+                if (devices.size() > 1 && speech.length() > 10) {
+                    size_t pos = speech.find("device");
+                    if (pos != std::string::npos) {
+                        std::string numStr = speech.substr(9, pos - 9);
+                        try {
+                            deviceIndex = std::stoi(numStr) - 1;
+                            remote_command = speech.substr(pos + 6);  // после "device"
+                        }
+                        catch (...) {
+                            log.warning("Failed to parse device number. Defaulting to first device.");
+                            deviceIndex = 0;
+                        }
+                    }
+                }
+
+                log.info("Sending remote command to device #" + std::to_string(deviceIndex + 1));
+
+                if (scanner.sendCommand(deviceIndex, remote_command, Config::dc_port)) {
+                    log.info("Command sent successfully to device #" + std::to_string(deviceIndex + 1));
                 }
                 else {
-                    log.warning("Failed to send command to " + target_ip);
+                    log.warning("Failed to send command to device #" + std::to_string(deviceIndex + 1));
                 }
 
-                continue; // skip local response if it's a remote command
+                continue;
             }
-            //else {
-            //    // Стандартный путь общения через kobold и TTS
-            //    std::string response = kobold.sendRequest(speech);
-            //    std::wstring w_response(response.begin(), response.end());
-            //    tts.speak(w_response);
-            //}
-
-            
+            else {
+                // Стандартный путь общения через kobold и TTS
+                std::string response = kobold.sendRequest(speech);
+                std::wstring w_response(response.begin(), response.end());
+                tts.speak(w_response);
+            }
         }
         else {
             log.error("Recognition error or empty result");
@@ -107,3 +128,4 @@ int main() {
     log.close_log();
     return 0;
 }
+

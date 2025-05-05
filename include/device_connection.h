@@ -1,4 +1,4 @@
-// Copyright MIT License 2025 VL_PLAY Games
+﻿// Copyright MIT License 2025 VL_PLAY Games
 
 #pragma once
 #ifndef DEVICE_CONNECTION_H
@@ -17,7 +17,8 @@ public:
 
     void scanLocalNetwork(const std::string& base_ip, int port, int threads = 10);
     std::vector<std::string> getDiscoveredDevices();
-    bool sendCommand(const std::string& ip, const std::string& command, int port);
+    bool sendCommand(int deviceIndex, const std::string& command, int port);
+    std::string getResponseFromDevice(const std::string& target_ip, int port, const std::string& command);
 
 private:
     Log& log;
