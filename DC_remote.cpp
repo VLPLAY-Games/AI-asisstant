@@ -1,4 +1,12 @@
-﻿//#ifdef _WIN32
+﻿//#include <iostream>
+//#include <string>
+//#include <vector>
+//#include <set>
+//#include <algorithm>
+//#include <cctype>
+//#include <mutex>
+//
+//#ifdef _WIN32
 //#define _WINSOCK_DEPRECATED_NO_WARNINGS
 //#include <winsock2.h>
 //#include <ws2tcpip.h>
@@ -9,18 +17,33 @@
 //#include <netinet/in.h>
 //#include <unistd.h>
 //#include <arpa/inet.h>
-//#include <string.h>
+//#include <cstring>
 //#define INVALID_SOCKET (-1)
 //#define SOCKET_ERROR (-1)
 //typedef int SOCKET;
 //#endif
 //
-//#include <iostream>
-//#include <string>
-//#include <algorithm>
+//std::set<std::string> trustedIps;
+//std::mutex trustMutex;
+//
+//bool isTrusted(const std::string& ip) {
+//    std::lock_guard<std::mutex> lock(trustMutex);
+//    return trustedIps.count(ip) > 0;
+//}
+//
+//void addTrustedIp(const std::string& ip) {
+//    std::lock_guard<std::mutex> lock(trustMutex);
+//    trustedIps.insert(ip);
+//}
+//
+//std::string trim(const std::string& str) {
+//    size_t first = str.find_first_not_of(" \t\n\r.");
+//    size_t last = str.find_last_not_of(" \t\n\r.");
+//    return (first == std::string::npos) ? "" : str.substr(first, last - first + 1);
+//}
 //
 //bool executeCommand(const std::string& command, std::string& statusMessage, bool& delayExecution) {
-//    std::cout << "[INFO] Received command: \"" << command << "\"" << std::endl;
+//    std::cout << "[INFO] Executing command: \"" << command << "\"" << std::endl;
 //    delayExecution = false;
 //
 //#ifdef _WIN32
@@ -64,19 +87,6 @@
 //        std::cout << "[ACTION] Checking system status..." << std::endl;
 //        statusMessage = "System is running normally on Windows.";
 //        return true;
-//    }
-//    else if (command == "Connected requested") {
-//        std::cout << "[PROMPT] Connection request received. Do you accept the connection? (y/n): ";
-//        char userInput;
-//        std::cin >> userInput;
-//        if (userInput == 'y' || userInput == 'Y') {
-//            statusMessage = "Connection accepted";
-//            return true;
-//        }
-//        else {
-//            statusMessage = "Connection declined";
-//            return false;
-//        }
 //    }
 //    else if (command == "open terminal") {
 //        std::cout << "[ACTION] Opening Command Prompt..." << std::endl;
@@ -138,19 +148,6 @@
 //        statusMessage = "System is running normally on Linux.";
 //        return true;
 //    }
-//    else if (command == "Connected requested") {
-//        std::cout << "[PROMPT] Connection request received. Do you accept the connection? (y/n): ";
-//        char userInput;
-//        std::cin >> userInput;
-//        if (userInput == 'y' || userInput == 'Y') {
-//            statusMessage = "Connection accepted.";
-//            return true;
-//        }
-//        else {
-//            statusMessage = "Connection declined.";
-//            return false;
-//        }
-//    }
 //    else if (command == "open terminal") {
 //        std::cout << "[ACTION] Opening terminal..." << std::endl;
 //        system("gnome-terminal");
@@ -175,26 +172,20 @@
 //    return false;
 //}
 //
-//
 //int main() {
-//    std::cout << "AI Assistant Device Remote Connection v1.1.0\n\n";
+//    std::cout << "AI Assistant Device Remote Server v1.2.0\n\n";
 //
 //#ifdef _WIN32
 //    WSADATA wsaData;
-//    std::cout << "[INFO] Initializing Winsock...\n";
 //    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-//        std::cerr << "[ERROR] WSAStartup failed.\n";
+//        std::cerr << "WSAStartup failed.\n";
 //        return 1;
 //    }
 //#endif
 //
-//    std::cout << "[INFO] Creating socket...\n";
 //    SOCKET listenSock = socket(AF_INET, SOCK_STREAM, 0);
 //    if (listenSock == INVALID_SOCKET) {
-//        std::cerr << "[ERROR] Cannot create socket.\n";
-//#ifdef _WIN32
-//        WSACleanup();
-//#endif
+//        std::cerr << "Socket creation failed.\n";
 //        return 1;
 //    }
 //
@@ -203,9 +194,8 @@
 //    addr.sin_addr.s_addr = INADDR_ANY;
 //    addr.sin_port = htons(50505);
 //
-//    std::cout << "[INFO] Binding socket to port 50505...\n";
 //    if (bind(listenSock, (sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR) {
-//        std::cerr << "[ERROR] Bind failed.\n";
+//        std::cerr << "Bind failed.\n";
 //#ifdef _WIN32
 //        closesocket(listenSock);
 //        WSACleanup();
@@ -215,9 +205,8 @@
 //        return 1;
 //    }
 //
-//    std::cout << "[INFO] Starting to listen for incoming connections...\n";
 //    if (listen(listenSock, SOMAXCONN) == SOCKET_ERROR) {
-//        std::cerr << "[ERROR] Listen failed.\n";
+//        std::cerr << "Listen failed.\n";
 //#ifdef _WIN32
 //        closesocket(listenSock);
 //        WSACleanup();
@@ -227,57 +216,84 @@
 //        return 1;
 //    }
 //
-//    std::cout << "[READY] Server is listening on port 50505.\n";
+//    std::cout << "[READY] Listening on port 50505...\n";
 //
 //    while (true) {
-//        std::cout << "[WAITING] Waiting for a client to connect...\n";
 //        SOCKET clientSock = accept(listenSock, nullptr, nullptr);
 //        if (clientSock == INVALID_SOCKET) {
-//            std::cerr << "[WARNING] Invalid client socket received. Skipping.\n";
+//            std::cerr << "[ERROR] Accept failed.\n";
 //            continue;
 //        }
-//
-//        std::cout << "[INFO] Client connected.\n";
 //
 //        char buffer[1024]{};
 //        int received = recv(clientSock, buffer, sizeof(buffer) - 1, 0);
 //        if (received > 0) {
 //            buffer[received] = '\0';
-//            std::string command(buffer);
+//            std::string input(buffer);
 //
-//            command.erase(command.begin(), std::find_if(command.begin(), command.end(), [](unsigned char c) {
-//                return !std::isspace(c) && c != '.';
-//                }));
-//            command.erase(std::find_if(command.rbegin(), command.rend(), [](unsigned char c) {
-//                return !std::isspace(c) && c != '.';
-//                }).base(), command.end());
+//            size_t sep = input.find('|');
+//            if (sep == std::string::npos) {
+//                std::string err = "FAIL: Malformed command.";
+//                send(clientSock, err.c_str(), static_cast<int>(err.length()), 0);
+//                goto cleanup;
+//            }
 //
-//            std::cout << "[COMMAND] Received: \"" << command << "\"\n";
+//            std::cout << "[REQUEST] " + input << "\n";
 //
-//            std::string status;
-//            bool delayExec = false;
-//            bool success = executeCommand(command, status, delayExec);
+//            std::string senderLine = trim(input.substr(0, sep));
+//            std::string command = trim(input.substr(sep + 1));
 //
-//            std::string response = success ? "SUCCESS: " : "FAIL: ";
-//            response += status;
+//            if (senderLine.find("FROM:") != 0) {
+//                std::string err = "FAIL: Missing sender IP.";
+//                send(clientSock, err.c_str(), static_cast<int>(err.length()), 0);
+//                goto cleanup;
+//            }
 //
-//            std::cout << "[RESPONSE] Sending back: \"" << response << "\"\n";
-//            send(clientSock, response.c_str(), static_cast<int>(response.length()), 0);
+//            std::string senderIp = trim(senderLine.substr(5));
+//            if (command == "Connected requested") {
+//                if (!isTrusted(senderIp)) {
+//                    std::cout << "[PROMPT] Connecting from new IP: " << senderIp << ". Allow? (y/n): ";
+//                    char choice;
+//                    std::cin >> choice;
+//                    if (choice == 'y' || choice == 'Y') {
+//                        addTrustedIp(senderIp);
+//                        std::cout << "[INFO] Added trusted IP: " << senderIp << "\n";
+//                        std::string success = "SUCCESS: Connection accepted";
+//                        send(clientSock, success.c_str(), static_cast<int>(success.length()), 0);
+//                    }
+//                    else {
+//                        std::string denied = "FAIL: IP not trusted.";
+//                        std::cout << "[INFO] Connection refused from: " << senderIp << "\n";
+//                        send(clientSock, denied.c_str(), static_cast<int>(denied.length()), 0);
+//                        goto cleanup;
+//                    }
+//                }
+//                else {
+//                    std::string success = "SUCCESS: Connection accepted";
+//                    send(clientSock, success.c_str(), static_cast<int>(success.length()), 0);
+//                }
+//            }
+//            else {
 //
-//            if (success && delayExec) {
-//                std::cout << "[ACTION] Executing delayed system command...\n";
+//                std::string status;
+//                bool delayExec = false;
+//                bool success = executeCommand(command, status, delayExec);
+//
+//                std::string response = (success ? "SUCCESS: " : "FAIL: ") + status;
+//                send(clientSock, response.c_str(), static_cast<int>(response.length()), 0);
+//
 //#ifdef _WIN32
-//                if (command == "shutdown system") {
+//                if (delayExec && command == "shutdown system") {
 //                    system("shutdown /s /f /t 0");
 //                }
-//                else if (command == "restart system") {
+//                else if (delayExec && command == "restart system") {
 //                    system("shutdown /r /f /t 0");
 //                }
 //#else
-//                if (command == "shutdown system") {
+//                if (delayExec && command == "shutdown system") {
 //                    system("shutdown -h now");
 //                }
-//                else if (command == "restart system") {
+//                else if (delayExec && command == "restart system") {
 //                    system("reboot");
 //                }
 //#endif
@@ -287,6 +303,7 @@
 //            std::cerr << "[WARNING] Failed to receive data or empty command.\n";
 //        }
 //
+//    cleanup:
 //#ifdef _WIN32
 //        closesocket(clientSock);
 //#else
@@ -305,4 +322,3 @@
 //    std::cout << "[INFO] Server shutdown.\n";
 //    return 0;
 //}
-//

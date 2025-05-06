@@ -78,10 +78,10 @@ void DC::scanRange(const std::string& base_ip, int start, int end, int port) {
         if (isPortOpen(ip, port)) {
             // Отправка команды "Connected requested" и ожидание ответа
             log.info("Sending connection request to " + ip + ":" + std::to_string(port));
-            std::string response = getResponseFromDevice(ip, port, "Connected requested");
+            std::string sender_ip = getLocalIPAddress();
+            std::string response = getResponseFromDevice(ip, port, "Connected requested", sender_ip);
 
             // Если ответ "Connection accepted", добавляем устройство в массив
-            std::cout << response;
             if (response == "SUCCESS: Connection accepted") {
                 std::lock_guard<std::mutex> lock(deviceMutex);
                 discoveredDevices.push_back(ip);
@@ -160,10 +160,12 @@ std::string DC::sendCommand(int deviceIndex, const std::string& command, int por
     }
 
     const std::string& target_ip = discoveredDevices[deviceIndex];
+    std::string sender_ip = getLocalIPAddress();
+
     log.info("Sending command to device #" + std::to_string(deviceIndex + 1) + " at " + target_ip + ":" + std::to_string(port) + " -> " + command);
 
     // Получаем ответ от устройства
-    std::string response = getResponseFromDevice(target_ip, port, command);
+    std::string response = getResponseFromDevice(target_ip, port, command, sender_ip);
     if (!response.empty()) {
         // Дополнительная логика, если ответ получен
         log.info("Command executed successfully. Response: " + response);
@@ -175,8 +177,23 @@ std::string DC::sendCommand(int deviceIndex, const std::string& command, int por
     return "0";
 }
 
+std::string DC::getLocalIPAddress() {
+    char hostname[256];
+    if (gethostname(hostname, sizeof(hostname)) == SOCKET_ERROR) {
+        return "unknown";
+    }
 
-std::string DC::getResponseFromDevice(const std::string& target_ip, int port, const std::string& command) {
+    struct hostent* host = gethostbyname(hostname);
+    if (!host) {
+        return "unknown";
+    }
+
+    struct in_addr* addr = reinterpret_cast<struct in_addr*>(host->h_addr);
+    return inet_ntoa(*addr);
+}
+
+
+std::string DC::getResponseFromDevice(const std::string& target_ip, int port, const std::string& command, const std::string& sender_ip) {
     SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock == INVALID_SOCKET) {
         log.error("Socket creation failed");
@@ -194,7 +211,8 @@ std::string DC::getResponseFromDevice(const std::string& target_ip, int port, co
         return "";
     }
 
-    send(sock, command.c_str(), static_cast<int>(command.size()), 0);
+    std::string formattedCommand = "FROM: " + sender_ip + " | " + command;
+    send(sock, formattedCommand.c_str(), static_cast<int>(formattedCommand.size()), 0);
 
     char buffer[1024]{};
     int received = recv(sock, buffer, sizeof(buffer) - 1, 0);

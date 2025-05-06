@@ -64,7 +64,7 @@ void Log::warning(const std::string& text) {
 }
 
 void Log::error(const std::string& text) {
-    std::cout << "[" + getCurrentTime() + "] [ERROR] " + text + "\n";
+    std::cerr << "[" + getCurrentTime() + "] [ERROR] " + text + "\n";
     log_file = fopen(log_path.c_str(), "a+");
     std::string logEntry = "[" + getCurrentTime() + "] [ERROR] " + text + "\n";
     fputs(logEntry.c_str(), log_file);

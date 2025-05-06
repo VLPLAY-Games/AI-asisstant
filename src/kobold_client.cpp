@@ -194,4 +194,3 @@ std::string KoboldClient::sendRequest(const std::string& prompt) {
 
     return getResponseFromJson(response);
 }
-
