@@ -31,6 +31,7 @@ public:
     static bool updateConfig(const std::string& filepath,
         const std::string& parameter,
         const std::string& value);
+    static bool saveAllConfig(const std::string& filepath);
 
 private:
     static void parseLine(const std::string& line);

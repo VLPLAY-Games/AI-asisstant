@@ -7,22 +7,24 @@
 #include <string>
 #include <vector>
 #include <portaudio.h>
+#include <windows.h>
+#include <mmsystem.h>
+#include <mmreg.h>
 
-class Recorder {
- public:
-    Recorder();
-    ~Recorder();
+  class Recorder {
+  public:
+      Recorder();
+      ~Recorder();
 
-    // Устанавливаем имя микрофона
-    void setMicrophone(const std::string& name);
+      void setMicrophone(const std::string& microphone);
+      bool record(const std::string& wav_path, int silence_db);
+      void stopRecording();
+      std::vector<std::string> listAvailableMicrophones() const;
 
-    // Основной метод записи
-    bool record(const std::string& wavPath, int silenceThreshold);
-    void listAvailableMicrophones() const;
-
- private:
-    std::string microphone_name;
-    PaDeviceIndex findInputDeviceByName(const std::string& name);
-};
+  private:
+      std::string microphone_name;
+      PaDeviceIndex findInputDeviceByName(const std::string& name);
+      bool stopRequested;
+  };
 
 #endif

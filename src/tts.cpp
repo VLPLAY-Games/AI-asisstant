@@ -9,8 +9,10 @@
 #include <cstdlib>
 #endif
 
-TextToSpeech::TextToSpeech(Log& log)
-    : initialized(false), log(log) {
+TextToSpeech::TextToSpeech(Log &log)
+    : initialized(false)
+    , log(log)
+{
     std::cout << "\n###############################\n";
     std::cout << "     Initializing TTS          \n";
     std::cout << "###############################\n\n";
@@ -18,8 +20,7 @@ TextToSpeech::TextToSpeech(Log& log)
 #ifdef _WIN32
     if (FAILED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED))) {
         log.error("Failed to initialize COM library.");
-    }
-    else {
+    } else {
         initialized = true;
         log.info("TextToSpeech initialized successfully (Windows).");
     }
@@ -33,14 +34,16 @@ TextToSpeech::TextToSpeech(Log& log)
     std::cout << "############################\n\n";
 }
 
-TextToSpeech::~TextToSpeech() {
+TextToSpeech::~TextToSpeech()
+{
 #ifdef _WIN32
     CoUninitialize();
 #endif
     log.info("TextToSpeech destroyed.");
 }
 
-void TextToSpeech::speak(const std::wstring& text) {
+void TextToSpeech::speak(const std::wstring &text)
+{
     std::wcout << std::endl;
     if (!initialized) {
         log.error("TextToSpeech is not initialized. Cannot speak.");
@@ -48,15 +51,18 @@ void TextToSpeech::speak(const std::wstring& text) {
     }
 
 #ifdef _WIN32
-    ISpVoice* pVoice = nullptr;
-    HRESULT hr = CoCreateInstance(CLSID_SpVoice, nullptr, CLSCTX_ALL, IID_ISpVoice, (void**)&pVoice);
+    ISpVoice *pVoice = nullptr;
+    HRESULT hr = CoCreateInstance(CLSID_SpVoice,
+                                  nullptr,
+                                  CLSCTX_ALL,
+                                  IID_ISpVoice,
+                                  (void **) &pVoice);
     if (SUCCEEDED(hr)) {
         pVoice->SetOutput(nullptr, TRUE);
         pVoice->Speak(text.c_str(), SPF_IS_XML, nullptr);
         pVoice->Release();
         log.info("Text spoken: " + std::string(text.begin(), text.end()));
-    }
-    else {
+    } else {
         log.error("Failed to create SAPI voice instance.");
     }
 #else
@@ -66,8 +72,7 @@ void TextToSpeech::speak(const std::wstring& text) {
     int result = system(command.c_str());
     if (result == 0) {
         log.info("Text spoken (Linux): " + std::string(text.begin(), text.end()));
-    }
-    else {
+    } else {
         log.error("Failed to run TTS command on Linux.");
     }
 #endif
@@ -75,7 +80,8 @@ void TextToSpeech::speak(const std::wstring& text) {
 
 #ifndef _WIN32
 // Escape quotes and special characters for shell usage
-std::wstring TextToSpeech::escapeForShell(const std::wstring& input) {
+std::wstring TextToSpeech::escapeForShell(const std::wstring &input)
+{
     std::wstring escaped;
     for (wchar_t ch : input) {
         if (ch == L'"' || ch == L'\\') {
@@ -86,7 +92,5 @@ std::wstring TextToSpeech::escapeForShell(const std::wstring& input) {
     return escaped;
 }
 #endif
-
-
 
 // sudo apt install espeak

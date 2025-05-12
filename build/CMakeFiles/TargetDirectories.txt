@@ -1,0 +1,9 @@
+C:/Users/ssselery/Desktop/coursework/AI-assistant/build/CMakeFiles/AI-assistant.dir
+C:/Users/ssselery/Desktop/coursework/AI-assistant/build/CMakeFiles/edit_cache.dir
+C:/Users/ssselery/Desktop/coursework/AI-assistant/build/CMakeFiles/rebuild_cache.dir
+C:/Users/ssselery/Desktop/coursework/AI-assistant/build/CMakeFiles/list_install_components.dir
+C:/Users/ssselery/Desktop/coursework/AI-assistant/build/CMakeFiles/install.dir
+C:/Users/ssselery/Desktop/coursework/AI-assistant/build/CMakeFiles/install/local.dir
+C:/Users/ssselery/Desktop/coursework/AI-assistant/build/CMakeFiles/install/strip.dir
+C:/Users/ssselery/Desktop/coursework/AI-assistant/build/CMakeFiles/AI-assistant_autogen_timestamp_deps.dir
+C:/Users/ssselery/Desktop/coursework/AI-assistant/build/CMakeFiles/AI-assistant_autogen.dir

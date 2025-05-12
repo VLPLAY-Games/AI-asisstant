@@ -4,6 +4,9 @@
 #ifndef TTS_H
 #define TTS_H
 
+#include <windows.h>
+#include <mmsystem.h>
+#include <mmreg.h>
 #include <string>
 #include "log.h"
 

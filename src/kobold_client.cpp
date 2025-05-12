@@ -1,14 +1,21 @@
 ﻿// Copyright MIT License 2025 VL_PLAY Games
 
 #include "../include/kobold_client.h"
+#include <chrono>
 #include <iostream>
 #include <string>
-#include <chrono>
 #include <thread>
 
-KoboldClient::KoboldClient(const std::string& server_url, const std::string& exe_path,
-    const std::string& cfg_path, const std::string& model_path, Log& log)
-    : server_url(server_url), exe_path(exe_path), cfg_path(cfg_path), model_path(model_path), log(log)
+KoboldClient::KoboldClient(const std::string &server_url,
+                           const std::string &exe_path,
+                           const std::string &cfg_path,
+                           const std::string &model_path,
+                           Log &log)
+    : server_url(server_url)
+    , exe_path(exe_path)
+    , cfg_path(cfg_path)
+    , model_path(model_path)
+    , log(log)
 {
     std::cout << "\n###############################\n";
     std::cout << "     Initializing KoboldCpp    ";
@@ -26,13 +33,11 @@ KoboldClient::KoboldClient(const std::string& server_url, const std::string& exe
         command = "start /B " + exe_path + " --config \"" + cfg_path + "\"";
         background_mode = true;
         log.info("Launching koboldcpp in background with config file: " + cfg_path);
-    }
-    else if (!model_path.empty()) {
+    } else if (!model_path.empty()) {
         command = "start /B " + exe_path + " \"" + model_path + "\"";
         background_mode = true;
         log.info("Launching koboldcpp in background with model: " + model_path);
-    }
-    else {
+    } else {
         command = "start " + exe_path;
         log.warning("Launching koboldcpp in normal mode without parameters");
     }
@@ -42,18 +47,17 @@ KoboldClient::KoboldClient(const std::string& server_url, const std::string& exe
     if (result != 0) {
         std::cerr << "Failed to execute koboldcpp!" << std::endl;
         log.error("Failed to execute koboldcpp: " + command);
-    }
-    else {
+    } else {
         if (background_mode) {
-            log.info("Successfully launched koboldcpp in background, waiting 20 sec for initialization...");
+            log.info("Successfully launched koboldcpp in background, waiting 20 sec for "
+                     "initialization...");
 
             // Добавляем задержку 20 секунд для инициализации
             for (int i = 20; i > 0; --i) {
                 log.info("Waiting... " + std::to_string(i) + " seconds remaining");
                 std::this_thread::sleep_for(std::chrono::seconds(1));
             }
-        }
-        else {
+        } else {
             log.info("Koboldcpp launched in normal mode (no waiting needed)");
         }
 
@@ -71,20 +75,17 @@ KoboldClient::KoboldClient(const std::string& server_url, const std::string& exe
     if (pid == 0) {
         // В дочернем процессе
         if (!cfg_path.empty()) {
-            execlp(exe_path.c_str(), exe_path.c_str(), "--config", cfg_path.c_str(), (char*)NULL);
-        }
-        else if (!model_path.empty()) {
-            execlp(exe_path.c_str(), exe_path.c_str(), model_path.c_str(), (char*)NULL);
-        }
-        else {
-            execlp(exe_path.c_str(), exe_path.c_str(), (char*)NULL);
+            execlp(exe_path.c_str(), exe_path.c_str(), "--config", cfg_path.c_str(), (char *) NULL);
+        } else if (!model_path.empty()) {
+            execlp(exe_path.c_str(), exe_path.c_str(), model_path.c_str(), (char *) NULL);
+        } else {
+            execlp(exe_path.c_str(), exe_path.c_str(), (char *) NULL);
         }
         // Если execlp возвращает, то произошла ошибка
         std::cerr << "Failed to execute koboldcpp on Linux!" << std::endl;
         log.error("Failed to execute koboldcpp on Linux.");
         exit(1);
-    }
-    else if (pid > 0) {
+    } else if (pid > 0) {
         // В родительском процессе
         log.info("Koboldcpp launched on Linux, waiting 20 sec for initialization...");
         // Добавляем задержку 20 секунд для инициализации
@@ -92,8 +93,7 @@ KoboldClient::KoboldClient(const std::string& server_url, const std::string& exe
             log.info("Waiting... " + std::to_string(i) + " seconds remaining");
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
-    }
-    else {
+    } else {
         std::cerr << "Fork failed!" << std::endl;
         log.error("Fork failed to launch koboldcpp on Linux.");
     }
@@ -107,31 +107,39 @@ KoboldClient::KoboldClient(const std::string& server_url, const std::string& exe
     std::cout << "\n##############################\n\n";
 }
 
-KoboldClient::~KoboldClient() {
+KoboldClient::~KoboldClient()
+{
     curl_global_cleanup();
     log.info("KoboldClient destroyed.");
 }
 
-size_t KoboldClient::writeCallback(void* contents, size_t size, \
-    size_t nmemb, std::string* output) {
+size_t KoboldClient::writeCallback(void *contents, size_t size, size_t nmemb, std::string *output)
+{
     size_t totalSize = size * nmemb;
-    output->append((char*)contents, totalSize);
+    output->append((char *) contents, totalSize);
     return totalSize;
 }
 
-std::string KoboldClient::escapeJsonString(const std::string& str) {
+std::string KoboldClient::escapeJsonString(const std::string &str)
+{
     std::string escapedStr;
     for (char c : str) {
-        if (c == '"') escapedStr += "\\\"";  // Экранирование кавычек
-        else if (c == '\\') escapedStr += "\\\\";  // обратного слэша
-        else if (c == '\n') escapedStr += "\\n";  // новой строки
-        else if (c == '\t') escapedStr += "\\t";  // табуляции
-        else escapedStr += c;  // Оставляем остальные символы
+        if (c == '"')
+            escapedStr += "\\\""; // Экранирование кавычек
+        else if (c == '\\')
+            escapedStr += "\\\\"; // обратного слэша
+        else if (c == '\n')
+            escapedStr += "\\n"; // новой строки
+        else if (c == '\t')
+            escapedStr += "\\t"; // табуляции
+        else
+            escapedStr += c; // Оставляем остальные символы
     }
     return escapedStr;
 }
 
-std::string KoboldClient::getResponseFromJson(const std::string& jsonResponse) {
+std::string KoboldClient::getResponseFromJson(const std::string &jsonResponse)
+{
     try {
         // Парсим строку JSON в объект
         json parsedJson = json::parse(jsonResponse);
@@ -145,18 +153,17 @@ std::string KoboldClient::getResponseFromJson(const std::string& jsonResponse) {
             std::cerr << "'response' field not found in JSON." << std::endl;
             return "Error: 'response' field not found in JSON";
         }
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         log.error("Error parsing JSON: " + std::string(e.what()));
-        std::cerr << "Error parsing JSON: " + \
-            std::string(e.what()) << std::endl;
+        std::cerr << "Error parsing JSON: " + std::string(e.what()) << std::endl;
         return "Error parsing JSON: " + std::string(e.what());
     }
 }
 
-std::string KoboldClient::sendRequest(const std::string& prompt) {
+std::string KoboldClient::sendRequest(const std::string &prompt)
+{
     std::cout << std::endl;
-    CURL* curl = curl_easy_init();
+    CURL *curl = curl_easy_init();
     if (!curl) {
         log.error("Failed to initialize cURL.");
         std::cerr << "Failed to initialize cURL." << std::endl;
@@ -165,11 +172,12 @@ std::string KoboldClient::sendRequest(const std::string& prompt) {
 
     std::string response;
     std::string escapedPrompt = escapeJsonString(prompt);
-    std::string jsonData = R"({"prompt": ")" + escapedPrompt + R"(", "max_length": 100})";  // JSON-запрос к KoboldCpp
+    std::string jsonData = R"({"prompt": ")" + escapedPrompt
+                           + R"(", "max_length": 100})"; // JSON-запрос к KoboldCpp
 
     log.info("Sending request to AI: " + jsonData);
 
-    struct curl_slist* headers = nullptr;
+    struct curl_slist *headers = nullptr;
     headers = curl_slist_append(headers, "Content-Type: application/json");
 
     curl_easy_setopt(curl, CURLOPT_URL, server_url.c_str());
@@ -181,10 +189,8 @@ std::string KoboldClient::sendRequest(const std::string& prompt) {
 
     CURLcode res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
-        log.error("cURL request failed: " + \
-            std::string(curl_easy_strerror(res)));
-        std::cerr << "cURL request failed: " + \
-            std::string(curl_easy_strerror(res)) << std::endl;
+        log.error("cURL request failed: " + std::string(curl_easy_strerror(res)));
+        std::cerr << "cURL request failed: " + std::string(curl_easy_strerror(res)) << std::endl;
     }
 
     curl_slist_free_all(headers);
