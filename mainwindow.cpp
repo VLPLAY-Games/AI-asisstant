@@ -8,6 +8,7 @@
 #include <QDir>
 #include <QTimer>
 #include <QStatusBar>
+#include <QtConcurrent>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -16,7 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    QString configFilePath = QDir("../files/config.cfg").absolutePath();
+    QString configFilePath = "C:/Users/ssselery/Desktop/coursework/AI-assistant/files/config.cfg";
     if (!Config::loadConfig(configFilePath.toStdString())) {
         updateStatus("Error: Failed to load configuration.");
         QMessageBox::critical(this, "Error", "Failed to load config.cfg. Check the file.");
@@ -31,8 +32,16 @@ MainWindow::MainWindow(QWidget *parent)
 
     QString windowTitle = QString::fromStdString(Config::app_name);
     setWindowTitle(windowTitle);
-}
 
+    // Установка иконки
+    QIcon appIcon("C:/Users/ssselery/Desktop/coursework/AI-assistant/files/mainlogo.png");
+    if (appIcon.isNull()) {
+        log->warning("Icon file not found or failed to load.");
+    } else {
+        setWindowIcon(appIcon);
+        log->info("Application icon set successfully.");
+    }
+}
 
 MainWindow::~MainWindow()
 {
@@ -83,15 +92,15 @@ void MainWindow::on_recordButton_clicked()
     static bool isRecording = false;
     if (!isRecording) {
         recorder->setMicrophone(Config::microphone);
-        updateStatus("Recording started..."); // Обновляем статус на "Recording started..."
+        updateStatus("Recording started...");
         if (recorder->record(Config::wav_path, Config::silence_db)) {
             ui->recordButton->setText("Stop Recording");
             isRecording = true;
-            updateStatus("Recording in progress..."); // Обновляем статус на "Recording in progress..."
+            updateStatus("Recording in progress...");
             ui->consoleTextEdit->append(formatResponse("Recording started."));
             log->info("Recording started.");
         } else {
-            updateStatus("Error: Failed to start recording."); // Обновляем статус на ошибку
+            updateStatus("Error: Failed to start recording.");
             ui->consoleTextEdit->append(formatResponse("Error: Failed to start recording."));
             log->error("Failed to start recording.");
             QMessageBox::warning(this, "Error", "Failed to start recording. Check microphone settings and PortAudio.");
@@ -101,96 +110,146 @@ void MainWindow::on_recordButton_clicked()
         recorder->stopRecording();
         ui->recordButton->setText("Start Recording");
         isRecording = false;
-        QString message = "Recording stopped. File saved to: " + QString::fromStdString(Config::wav_path);
-        updateStatus("Recognizing..."); // Обновляем статус на "Recognizing..."
-        ui->consoleTextEdit->append(formatResponse(message));
-        log->info("Recording stopped.");
+        updateStatus("Recognizing...");
 
-        log->info("Starting speech recognition.");
-        std::string speech = recognizer->recognize(Config::wav_path);
+        // Асинхронное распознавание
+        QFuture<std::string> future = QtConcurrent::run([this]() {
+            return recognizer->recognize(Config::wav_path);
+        });
 
-        if (!speech.empty()) {
-            log->info("Speech recognized: " + speech);
-            ui->consoleTextEdit->append(formatResponse("Speech recognized: " + QString::fromStdString(speech)));
+        QFutureWatcher<std::string> *watcher = new QFutureWatcher<std::string>(this);
+        connect(watcher, &QFutureWatcher<std::string>::finished, this, [this, watcher]() {
+            std::string speech = watcher->result();
+            watcher->deleteLater();
 
-            std::string processedSpeech = speech;
-            std::transform(processedSpeech.begin(), processedSpeech.end(), processedSpeech.begin(), ::tolower);
+            if (!speech.empty()) {
+                log->info("Speech recognized: " + speech);
+                ui->consoleTextEdit->append(formatResponse("Speech recognized: " + QString::fromStdString(speech)));
 
-            if (processedSpeech.find("stop") != std::string::npos || processedSpeech.find("exit") != std::string::npos) {
-                log->info("Stop/exit command detected. Terminating application.");
-                ui->consoleTextEdit->append(formatResponse("Stop/exit command detected. Terminating application."));
-                QApplication::quit();
-                return;
-            }
+                std::string processedSpeech = speech;
+                std::transform(processedSpeech.begin(), processedSpeech.end(), processedSpeech.begin(), ::tolower);
 
-            if (processedSpeech.find("send to device") != std::string::npos) {
-                std::string remote_command = processedSpeech.substr(processedSpeech.find("send to device") + 15);
-                auto devices = deviceConnection->getDiscoveredDevices();
-
-                if (devices.empty()) {
-                    log->warning("No devices found.");
-                    ui->consoleTextEdit->append(formatResponse("No devices found."));
-                    updateStatus("No devices found."); // Обновляем статус на "No devices found"
+                if (processedSpeech.find("stop") != std::string::npos || processedSpeech.find("exit") != std::string::npos) {
+                    log->info("Stop/exit command detected. Terminating application.");
+                    ui->consoleTextEdit->append(formatResponse("Stop/exit command detected. Terminating application."));
+                    QApplication::quit();
                     return;
                 }
 
-                int deviceIndex = 0;
-                if (devices.size() > 1 && processedSpeech.length() > 15) {
-                    size_t pos = processedSpeech.find("device");
-                    if (pos != std::string::npos) {
-                        std::string numStr = processedSpeech.substr(14, pos - 14);
-                        try {
-                            deviceIndex = std::stoi(numStr) - 1;
-                            remote_command = processedSpeech.substr(pos + 6);
-                        } catch (...) {
-                            log->warning("Failed to determine device number. Using first device.");
-                            ui->consoleTextEdit->append(formatResponse("Failed to determine device number. Using first device."));
-                            deviceIndex = 0;
+                if (processedSpeech.find("send to device") != std::string::npos) {
+                    std::string remote_command = processedSpeech.substr(processedSpeech.find("send to device") + 15);
+                    auto devices = deviceConnection->getDiscoveredDevices();
+
+                    if (devices.empty()) {
+                        log->warning("No devices found.");
+                        ui->consoleTextEdit->append(formatResponse("No devices found."));
+                        updateStatus("No devices found.");
+                        return;
+                    }
+
+                    int deviceIndex = 0;
+                    if (devices.size() > 1 && processedSpeech.length() > 15) {
+                        size_t pos = processedSpeech.find("device");
+                        if (pos != std::string::npos) {
+                            std::string numStr = processedSpeech.substr(14, pos - 14);
+                            try {
+                                deviceIndex = std::stoi(numStr) - 1;
+                                remote_command = processedSpeech.substr(pos + 6);
+                            } catch (...) {
+                                log->warning("Failed to determine device number. Using first device.");
+                                ui->consoleTextEdit->append(formatResponse("Failed to determine device number. Using first device."));
+                                deviceIndex = 0;
+                            }
                         }
                     }
-                }
 
-                log->info("Sending command to device #" + std::to_string(deviceIndex + 1));
-                ui->consoleTextEdit->append(formatResponse(QString("Sending command to device #%1").arg(deviceIndex + 1)));
+                    log->info("Sending command to device #" + std::to_string(deviceIndex + 1));
+                    ui->consoleTextEdit->append(formatResponse(QString("Sending command to device #%1").arg(deviceIndex + 1)));
 
-                std::string response = deviceConnection->sendCommand(deviceIndex, remote_command, Config::dc_port);
+                    // Асинхронная отправка команды устройству
+                    QFuture<std::string> deviceFuture = QtConcurrent::run([this, deviceIndex, remote_command]() {
+                        return deviceConnection->sendCommand(deviceIndex, remote_command, Config::dc_port);
+                    });
 
-                if (response != "0") {
-                    log->info("Command successfully sent to device #" + std::to_string(deviceIndex + 1));
-                    log->info("Device response: " + response);
-                    ui->consoleTextEdit->append(formatResponse(QString("Command successfully sent to device #%1").arg(deviceIndex + 1)));
-                    ui->consoleTextEdit->append(formatResponse("Device response: " + QString::fromStdString(response)));
-                    std::wstring w_response(response.begin(), response.end());
-                    tts->speak(w_response);
-                    updateStatus("Neural network response..."); // Временный статус
-                    QTimer::singleShot(2000, this, [this]() { updateStatus("Waiting for next command..."); }); // Возвращаем к ожиданию
+                    QFutureWatcher<std::string> *deviceWatcher = new QFutureWatcher<std::string>(this);
+                    connect(deviceWatcher, &QFutureWatcher<std::string>::finished, this, [this, deviceWatcher, deviceIndex]() {
+                        std::string response = deviceWatcher->result();
+                        deviceWatcher->deleteLater();
+
+                        if (response != "0") {
+                            log->info("Command successfully sent to device #" + std::to_string(deviceIndex + 1));
+                            log->info("Device response: " + response);
+                            ui->consoleTextEdit->append(formatResponse(QString("Command successfully sent to device #%1").arg(deviceIndex + 1)));
+                            ui->consoleTextEdit->append(formatResponse("Device response: " + QString::fromStdString(response)));
+
+                            // Асинхронный вызов tts->speak()
+                            QFuture<void> ttsFuture = QtConcurrent::run([this, response]() {
+                                std::wstring w_response(response.begin(), response.end());
+                                tts->speak(w_response);
+                            });
+
+                            QFutureWatcher<void> *ttsWatcher = new QFutureWatcher<void>(this);
+                            connect(ttsWatcher, &QFutureWatcher<void>::finished, this, [this, ttsWatcher]() {
+                                ttsWatcher->deleteLater();
+                                updateStatus("Neural network response...");
+                                QTimer::singleShot(2000, this, [this]() { updateStatus("Waiting for next command..."); });
+                            });
+                            ttsWatcher->setFuture(ttsFuture);
+                        } else {
+                            log->warning("Failed to send command to device #" + std::to_string(deviceIndex + 1));
+                            ui->consoleTextEdit->append(formatResponse(QString("Failed to send command to device #%1").arg(deviceIndex + 1)));
+                            updateStatus("Error sending command to device. Waiting for next command...");
+                        }
+                    });
+
+                    deviceWatcher->setFuture(deviceFuture);
                 } else {
-                    log->warning("Failed to send command to device #" + std::to_string(deviceIndex + 1));
-                    ui->consoleTextEdit->append(formatResponse(QString("Failed to send command to device #%1").arg(deviceIndex + 1)));
-                    updateStatus("Error sending command to device. Waiting for next command..."); // Обновляем статус на ошибку
+                    log->info("Sending request to neural network: " + speech);
+                    updateStatus("Neural network response...");
+
+                    // Асинхронный запрос к нейронной сети
+                    QFuture<std::string> nnFuture = QtConcurrent::run([this, speech]() {
+                        return koboldClient->sendRequest(speech);
+                    });
+
+                    QFutureWatcher<std::string> *nnWatcher = new QFutureWatcher<std::string>(this);
+                    connect(nnWatcher, &QFutureWatcher<std::string>::finished, this, [this, nnWatcher, speech]() {
+                        std::string response = nnWatcher->result();
+                        nnWatcher->deleteLater();
+
+                        if (!response.empty()) {
+                            log->info("Neural network response: " + response);
+                            ui->consoleTextEdit->append(formatResponse("Neural network response: " + QString::fromStdString(response)));
+
+                            // Асинхронный вызов tts->speak()
+                            QFuture<void> ttsFuture = QtConcurrent::run([this, response]() {
+                                std::wstring w_response(response.begin(), response.end());
+                                tts->speak(w_response);
+                            });
+
+                            QFutureWatcher<void> *ttsWatcher = new QFutureWatcher<void>(this);
+                            connect(ttsWatcher, &QFutureWatcher<void>::finished, this, [this, ttsWatcher]() {
+                                ttsWatcher->deleteLater();
+                                QTimer::singleShot(2000, this, [this]() { updateStatus("Waiting for next command..."); });
+                            });
+                            ttsWatcher->setFuture(ttsFuture);
+                        } else {
+                            log->error("Error: Neural network did not return a response for request: " + speech);
+                            ui->consoleTextEdit->append(formatResponse("Error: Neural network did not return a response."));
+                            updateStatus("Error: Neural network did not return a response. Waiting for next command...");
+                        }
+                    });
+
+                    nnWatcher->setFuture(nnFuture);
                 }
             } else {
-                log->info("Sending request to neural network: " + speech);
-                updateStatus("Neural network response..."); // Обновляем статус на "Neural network response..."
-                std::string response = koboldClient->sendRequest(speech);
-
-                if (!response.empty()) {
-                    log->info("Neural network response: " + response);
-                    ui->consoleTextEdit->append(formatResponse("Neural network response: " + QString::fromStdString(response)));
-                    std::wstring w_response(response.begin(), response.end());
-                    tts->speak(w_response);
-                    QTimer::singleShot(2000, this, [this]() { updateStatus("Waiting for next command..."); }); // Возвращаем к ожиданию
-                } else {
-                    log->error("Error: Neural network did not return a response for request: " + speech);
-                    ui->consoleTextEdit->append(formatResponse("Error: Neural network did not return a response."));
-                    updateStatus("Error: Neural network did not return a response. Waiting for next command..."); // Обновляем статус на ошибку
-                }
+                log->error("Recognition error or empty result.");
+                ui->consoleTextEdit->append(formatResponse("Recognition error or empty result."));
+                updateStatus("Recognition error. Waiting for next command...");
             }
-        } else {
-            log->error("Recognition error or empty result.");
-            ui->consoleTextEdit->append(formatResponse("Recognition error or empty result."));
-            updateStatus("Recognition error. Waiting for next command..."); // Обновляем статус на ошибку
-        }
+        });
+
+        watcher->setFuture(future);
     }
 }
 
@@ -272,23 +331,45 @@ void MainWindow::on_sendTextButton_clicked()
     }
 
     log->info("Text request sent: " + text.toStdString());
-    updateStatus("Processing text..."); // Изменяем статус на "Processing text..."
+    updateStatus("Processing text...");
     QTimer::singleShot(1000, this, [this, text]() {
-        updateStatus("Neural network response..."); // Изменяем статус на "Neural network response..."
-        std::string response = koboldClient->sendRequest(text.toStdString());
+        updateStatus("Neural network response...");
 
-        if (!response.empty()) {
-            log->info("Neural network response: " + response);
-            ui->consoleTextEdit->append(formatResponse("Your request: " + text));
-            ui->consoleTextEdit->append(formatResponse("Neural network response: " + QString::fromStdString(response)));
-            std::wstring w_response(response.begin(), response.end());
-            tts->speak(w_response);
-            QTimer::singleShot(2000, this, [this]() { updateStatus("Waiting for next command..."); }); // Возвращаем к ожиданию
-        } else {
-            log->error("Error: Neural network did not return a response for text request: " + text.toStdString());
-            ui->consoleTextEdit->append(formatResponse("Error: Neural network did not return a response."));
-            updateStatus("Error: Neural network did not return a response. Waiting for next command...");
-        }
+        // Асинхронный запрос к нейронной сети
+        QFuture<std::string> future = QtConcurrent::run([this, text]() {
+            return koboldClient->sendRequest(text.toStdString());
+        });
+
+        QFutureWatcher<std::string> *watcher = new QFutureWatcher<std::string>(this);
+        connect(watcher, &QFutureWatcher<std::string>::finished, this, [this, watcher, text]() {
+            std::string response = watcher->result();
+            watcher->deleteLater();
+
+            if (!response.empty()) {
+                log->info("Neural network response: " + response);
+                ui->consoleTextEdit->append(formatResponse("Your request: " + text));
+                ui->consoleTextEdit->append(formatResponse("Neural network response: " + QString::fromStdString(response)));
+
+                // Асинхронный вызов tts->speak()
+                QFuture<void> ttsFuture = QtConcurrent::run([this, response]() {
+                    std::wstring w_response(response.begin(), response.end());
+                    tts->speak(w_response);
+                });
+
+                QFutureWatcher<void> *ttsWatcher = new QFutureWatcher<void>(this);
+                connect(ttsWatcher, &QFutureWatcher<void>::finished, this, [this, ttsWatcher]() {
+                    ttsWatcher->deleteLater();
+                    QTimer::singleShot(2000, this, [this]() { updateStatus("Waiting for next command..."); });
+                });
+                ttsWatcher->setFuture(ttsFuture);
+            } else {
+                log->error("Error: Neural network did not return a response for text request: " + text.toStdString());
+                ui->consoleTextEdit->append(formatResponse("Error: Neural network did not return a response."));
+                updateStatus("Error: Neural network did not return a response. Waiting for next command...");
+            }
+        });
+
+        watcher->setFuture(future);
     });
 
     ui->inputLineEdit->clear();
@@ -296,7 +377,7 @@ void MainWindow::on_sendTextButton_clicked()
 
 QString MainWindow::formatResponse(const QString& text)
 {
-    return "<div style='border: 1px solid #555; padding: 5px;'><p style='color: #FFFFFF; font-family: Arial; font-size: 14px; margin: 5px;'>" + text + "</p></div>";
+    return "<div style='border: 1px solid #555; padding: 5px;'><p style='color: #FFFFFF; font-family: Arial; font-size: 16px; margin: 5px;'>" + text + "</p></div>";
 }
 
 void MainWindow::updateMicrophoneList()
@@ -329,11 +410,37 @@ void MainWindow::updateMicrophoneList()
 
 void MainWindow::updateStatus(const QString& message)
 {
-    ui->statusTextEdit->setText(message);
+    ui->statusTextEdit->setText("<p style='font-family: Arial; font-size: 16px; color: #FFFFFF; margin: 5px;'>" + message + "</p>");
 }
 
 void MainWindow::loadSettings()
 {
+    QString basePath = "C:/Users/ssselery/Desktop/coursework/AI-assistant/files";
+    if (QDir::isRelativePath(QString::fromStdString(Config::log_path))) {
+        Config::log_path = (basePath + "/" + QString::fromStdString(Config::log_path).replace("../files/", "")).toStdString();
+    }
+    if (QDir::isRelativePath(QString::fromStdString(Config::wav_path))) {
+        Config::wav_path = (basePath + "/" + QString::fromStdString(Config::wav_path).replace("../files/", "")).toStdString();
+    }
+    if (QDir::isRelativePath(QString::fromStdString(Config::output_txt_path))) {
+        Config::output_txt_path = (basePath + "/" + QString::fromStdString(Config::output_txt_path).replace("../files/", "")).toStdString();
+    }
+    if (QDir::isRelativePath(QString::fromStdString(Config::whisper_cli_path))) {
+        Config::whisper_cli_path = (basePath + "/" + QString::fromStdString(Config::whisper_cli_path).replace("../files/", "")).toStdString();
+    }
+    if (QDir::isRelativePath(QString::fromStdString(Config::whisper_model_path))) {
+        Config::whisper_model_path = (basePath + "/" + QString::fromStdString(Config::whisper_model_path).replace("../files/", "")).toStdString();
+    }
+    if (QDir::isRelativePath(QString::fromStdString(Config::koboldcpp_path))) {
+        Config::koboldcpp_path = (basePath + "/" + QString::fromStdString(Config::koboldcpp_path).replace("../files/", "")).toStdString();
+    }
+    if (QDir::isRelativePath(QString::fromStdString(Config::koboldcpp_cfg_path))) {
+        Config::koboldcpp_cfg_path = (basePath + "/" + QString::fromStdString(Config::koboldcpp_cfg_path).replace("../files/", "")).toStdString();
+    }
+    if (QDir::isRelativePath(QString::fromStdString(Config::koboldcpp_model_path))) {
+        Config::koboldcpp_model_path = (basePath + "/" + QString::fromStdString(Config::koboldcpp_model_path).replace("../files/", "")).toStdString();
+    }
+
     ui->microphoneComboBox->setCurrentText(QString::fromStdString(Config::microphone));
     ui->logPathLineEdit->setText(QString::fromStdString(Config::log_path));
     ui->wavPathLineEdit->setText(QString::fromStdString(Config::wav_path));
@@ -365,8 +472,8 @@ void MainWindow::saveSettings()
     Config::dc_subnet = ui->dcSubnetLineEdit->text().toStdString();
     Config::dc_port = ui->dcPortLineEdit->text().toInt();
 
-    log->info("Attempting to save settings to files/config.cfg");
-    QString configPath = QDir("../files/config.cfg").absolutePath();
+    log->info("Attempting to save settings to config.cfg");
+    QString configPath = "C:/Users/ssselery/Desktop/coursework/AI-assistant/files/config.cfg";
     bool success = Config::saveAllConfig(configPath.toStdString());
     if (success) {
         log->info("Settings saved successfully to " + configPath.toStdString());
@@ -374,12 +481,10 @@ void MainWindow::saveSettings()
 
         QString windowTitle = QString::fromStdString(Config::app_name);
         setWindowTitle(windowTitle);
-
         QLabel* versionLabel = dynamic_cast<QLabel*>(ui->statusbar->children().last());
         if (versionLabel) {
-            versionLabel->setText("v " + QString::fromStdString(Config::app_version));
+            versionLabel->setText("v" + QString::fromStdString(Config::app_version));
         }
-
         log->info("Window title updated: " + windowTitle.toStdString());
     } else {
         log->error("Failed to save settings to " + configPath.toStdString());

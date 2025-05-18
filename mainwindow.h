@@ -1,15 +1,15 @@
-// mainwindow.h
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QDir>
+#include "config.h"
 #include "log.h"
 #include "recorder.h"
 #include "recognizer.h"
 #include "tts.h"
 #include "kobold_client.h"
 #include "device_connection.h"
-#include "config.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -23,6 +23,14 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+    void on_recordButton_clicked();
+    void on_listMicrophonesButton_clicked();
+    void on_showLogButton_clicked();
+    void on_scanNetworkButton_clicked();
+    void on_saveSettingsButton_clicked();
+    void on_sendTextButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     Log *log;
@@ -35,19 +43,11 @@ private:
 
     void initializeComponents();
     void setupConnections();
-    void updateMicrophoneList();
-    void updateStatus(const QString& message);
     void loadSettings();
     void saveSettings();
-
+    void updateMicrophoneList();
+    void updateStatus(const QString& message);
     QString formatResponse(const QString& text);
-
-private slots:
-    void on_recordButton_clicked();
-    void on_listMicrophonesButton_clicked();
-    void on_showLogButton_clicked();
-    void on_scanNetworkButton_clicked();
-    void on_saveSettingsButton_clicked();
-    void on_sendTextButton_clicked(); // Новый слот для текстового запроса
 };
+
 #endif // MAINWINDOW_H

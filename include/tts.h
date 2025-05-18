@@ -27,6 +27,7 @@ private:
     Log& log;
 
 #ifdef _WIN32
+    ISpVoice* pVoice;
     // Windows-specific
 #else
     // Linux-specific

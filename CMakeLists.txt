@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(AI-assistant VERSION 0.9.0 LANGUAGES CXX)
+project(AI-assistant VERSION 1.2.0 LANGUAGES CXX)
 
 # Базовые настройки Qt
 set(CMAKE_AUTOUIC ON)
@@ -9,8 +9,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Поиск Qt
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Core)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Core)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Core Concurrent)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Core Concurrent)
 
 # Определения для Windows
 if(WIN32)
@@ -35,23 +35,19 @@ set(PROJECT_SOURCES
     include/kobold_client.h
     include/device_connection.h
     include/nlohmann/json.hpp
-    # Подключаем MainWindow (UI) и соответствующие файлы
     mainwindow.cpp
     mainwindow.h
     ${CMAKE_CURRENT_SOURCE_DIR}/mainwindow.ui
 )
 
-# Включение директорий
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-# Создаём директорию files в build и копируем config.cfg с синхронизацией
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/files)
 configure_file(${CMAKE_SOURCE_DIR}/files/config.cfg ${CMAKE_BINARY_DIR}/files/config.cfg COPYONLY)
 
-# Создание исполняемого файла
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(AI-assistant
         MANUAL_FINALIZATION
@@ -67,6 +63,7 @@ endif()
 target_link_libraries(AI-assistant PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Concurrent
 )
 
 # Поиск и подключение PortAudio

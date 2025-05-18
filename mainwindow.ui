@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>608</width>
-    <height>717</height>
+    <width>716</width>
+    <height>666</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>0</width>
+    <height>666</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>AI-Assistant v0.3.0</string>
@@ -63,7 +69,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -160,7 +166,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
            <widget class="QComboBox" name="microphoneComboBox">
             <property name="minimumSize">
              <size>
-              <width>494</width>
+              <width>600</width>
               <height>0</height>
              </size>
             </property>
@@ -350,17 +356,17 @@ li.checked::marker { content: &quot;\2612&quot;; }
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>608</width>
-     <height>21</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QStatusBar" name="statusbar"/>
- </widget>
- <resources/>
- <connections/>
-</ui>
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>716</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QStatusBar" name="statusbar"/>
+   </widget>
+   <resources/>
+   <connections/>
+  </ui>

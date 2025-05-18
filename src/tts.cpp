@@ -12,18 +12,30 @@
 TextToSpeech::TextToSpeech(Log &log)
     : initialized(false)
     , log(log)
+#ifdef _WIN32
+    , pVoice(nullptr)
+#endif
 {
     std::cout << "\n###############################\n";
     std::cout << "     Initializing TTS          \n";
     std::cout << "###############################\n\n";
 
 #ifdef _WIN32
-    if (FAILED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED))) {
-        log.error("Failed to initialize COM library.");
-    } else {
-        initialized = true;
-        log.info("TextToSpeech initialized successfully (Windows).");
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr)) {
+        log.error("Failed to initialize COM library. HRESULT: " + std::to_string(hr));
+        return;
     }
+
+    hr = CoCreateInstance(CLSID_SpVoice, nullptr, CLSCTX_ALL, IID_ISpVoice, (void**)&pVoice);
+    if (FAILED(hr)) {
+        log.error("Failed to create SAPI voice instance. HRESULT: " + std::to_string(hr));
+        CoUninitialize();
+        return;
+    }
+
+    initialized = true;
+    log.info("TextToSpeech initialized successfully (Windows).");
 #else
     initialized = true;
     log.info("TextToSpeech initialized successfully (Linux).");
@@ -37,6 +49,10 @@ TextToSpeech::TextToSpeech(Log &log)
 TextToSpeech::~TextToSpeech()
 {
 #ifdef _WIN32
+    if (pVoice) {
+        pVoice->Release();
+        pVoice = nullptr;
+    }
     CoUninitialize();
 #endif
     log.info("TextToSpeech destroyed.");
@@ -51,20 +67,33 @@ void TextToSpeech::speak(const std::wstring &text)
     }
 
 #ifdef _WIN32
-    ISpVoice *pVoice = nullptr;
-    HRESULT hr = CoCreateInstance(CLSID_SpVoice,
-                                  nullptr,
-                                  CLSCTX_ALL,
-                                  IID_ISpVoice,
-                                  (void **) &pVoice);
-    if (SUCCEEDED(hr)) {
-        pVoice->SetOutput(nullptr, TRUE);
-        pVoice->Speak(text.c_str(), SPF_IS_XML, nullptr);
-        pVoice->Release();
-        log.info("Text spoken: " + std::string(text.begin(), text.end()));
-    } else {
-        log.error("Failed to create SAPI voice instance.");
+    // Инициализируем COM для текущего потока (на случай вызова через QtConcurrent)
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr) && hr != S_FALSE) { // S_FALSE означает, что COM уже инициализирован
+        log.error("Failed to initialize COM in speak thread. HRESULT: " + std::to_string(hr));
+        return;
     }
+
+    if (pVoice) {
+        hr = pVoice->SetOutput(nullptr, TRUE);
+        if (FAILED(hr)) {
+            log.error("Failed to set SAPI output. HRESULT: " + std::to_string(hr));
+            CoUninitialize();
+            return;
+        }
+
+        hr = pVoice->Speak(text.c_str(), SPF_ASYNC | SPF_PURGEBEFORESPEAK, nullptr);
+        if (SUCCEEDED(hr)) {
+            log.info("Text spoken: " + std::string(text.begin(), text.end()));
+        } else {
+            log.error("Failed to speak text. HRESULT: " + std::to_string(hr));
+        }
+    } else {
+        log.error("No SAPI voice instance available.");
+    }
+
+    // Деинициализируем COM для текущего потока
+    CoUninitialize();
 #else
     // Convert std::wstring to UTF-8
     std::wstring safeText = escapeForShell(text);
@@ -92,5 +121,3 @@ std::wstring TextToSpeech::escapeForShell(const std::wstring &input)
     return escaped;
 }
 #endif
-
-// sudo apt install espeak
