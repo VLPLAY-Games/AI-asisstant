@@ -15,9 +15,13 @@
 #include <winsock2.h>
 #pragma comment(lib, "ws2_32.lib")
 #else
-#include <arpa/inet.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include <unistd.h>
+#include <fcntl.h>      // fcntl, F_SETFL, O_NONBLOCK
+#include <unistd.h>     // close(), read(), write()
+#include <netdb.h>      // gethostbyname, struct hostent
+#include <netinet/in.h> // sockaddr_in
 #define SOCKET int
 #define INVALID_SOCKET (-1)
 #define SOCKET_ERROR (-1)
