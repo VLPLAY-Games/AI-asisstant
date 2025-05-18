@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
+    <width>608</width>
     <height>717</height>
    </rect>
   </property>
@@ -148,34 +148,6 @@ li.checked::marker { content: &quot;\2612&quot;; }
        </attribute>
        <layout class="QVBoxLayout" name="settingsLayout">
         <item>
-         <layout class="QHBoxLayout" name="appNameLayout">
-          <item>
-           <widget class="QLabel" name="appNameLabel">
-            <property name="text">
-             <string>App Name:</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="appNameLineEdit"/>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="appVersionLayout">
-          <item>
-           <widget class="QLabel" name="appVersionLabel">
-            <property name="text">
-             <string>App Version:</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="appVersionLineEdit"/>
-          </item>
-         </layout>
-        </item>
-        <item>
          <layout class="QHBoxLayout" name="microphoneLayout">
           <item>
            <widget class="QLabel" name="microphoneLabel">
@@ -185,7 +157,14 @@ li.checked::marker { content: &quot;\2612&quot;; }
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="microphoneComboBox"/>
+           <widget class="QComboBox" name="microphoneComboBox">
+            <property name="minimumSize">
+             <size>
+              <width>494</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -375,7 +354,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>600</width>
+     <width>608</width>
      <height>21</height>
     </rect>
    </property>

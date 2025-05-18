@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <QDir>
 #include <QTimer>
+#include <QStatusBar>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -17,8 +18,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     QString configFilePath = QDir("../files/config.cfg").absolutePath();
     if (!Config::loadConfig(configFilePath.toStdString())) {
-        updateStatus("Ошибка: Не удалось загрузить конфигурацию.");
-        QMessageBox::critical(this, "Ошибка", "Не удалось загрузить config.cfg. Проверьте файл.");
+        updateStatus("Error: Failed to load configuration.");
+        QMessageBox::critical(this, "Error", "Failed to load config.cfg. Check the file.");
         return;
     }
 
@@ -26,13 +27,12 @@ MainWindow::MainWindow(QWidget *parent)
     setupConnections();
     loadSettings();
     updateMicrophoneList();
-    updateStatus("Ожидание команды...");
+    updateStatus("Waiting for command...");
 
-    // Устанавливаем начальный заголовок окна
-    QString windowTitle = QString::fromStdString(Config::app_name) + " v" + QString::fromStdString(Config::app_version);
+    QString windowTitle = QString::fromStdString(Config::app_name);
     setWindowTitle(windowTitle);
-    log->info("Установлен заголовок окна: " + windowTitle.toStdString());
 }
+
 
 MainWindow::~MainWindow()
 {
@@ -48,7 +48,7 @@ MainWindow::~MainWindow()
 void MainWindow::initializeComponents()
 {
     log = new Log(Config::log_path);
-    log->info("Инициализация начата.");
+    log->info("Initialization started.");
 
     recorder = new Recorder();
     recognizer = new Recognizer(Config::whisper_cli_path, Config::whisper_model_path, *log);
@@ -57,7 +57,7 @@ void MainWindow::initializeComponents()
                                     Config::koboldcpp_cfg_path, Config::koboldcpp_model_path, *log);
     deviceConnection = new DC(*log);
 
-    log->info("Компоненты инициализированы.");
+    log->info("Components initialized.");
 }
 
 void MainWindow::setupConnections()
@@ -83,42 +83,42 @@ void MainWindow::on_recordButton_clicked()
     static bool isRecording = false;
     if (!isRecording) {
         recorder->setMicrophone(Config::microphone);
-        updateStatus("Запись начата..."); // Обновляем статус на "Запись начата..."
+        updateStatus("Recording started..."); // Обновляем статус на "Recording started..."
         if (recorder->record(Config::wav_path, Config::silence_db)) {
-            ui->recordButton->setText("Остановить запись");
+            ui->recordButton->setText("Stop Recording");
             isRecording = true;
-            updateStatus("Идёт запись..."); // Обновляем статус на "Идёт запись..."
-            ui->consoleTextEdit->append(formatResponse("Запись начата."));
-            log->info("Запись начата.");
+            updateStatus("Recording in progress..."); // Обновляем статус на "Recording in progress..."
+            ui->consoleTextEdit->append(formatResponse("Recording started."));
+            log->info("Recording started.");
         } else {
-            updateStatus("Ошибка: Не удалось начать запись."); // Обновляем статус на ошибку
-            ui->consoleTextEdit->append(formatResponse("Ошибка: Не удалось начать запись."));
-            log->error("Не удалось начать запись.");
-            QMessageBox::warning(this, "Ошибка", "Не удалось начать запись. Проверьте настройки микрофона и PortAudio.");
+            updateStatus("Error: Failed to start recording."); // Обновляем статус на ошибку
+            ui->consoleTextEdit->append(formatResponse("Error: Failed to start recording."));
+            log->error("Failed to start recording.");
+            QMessageBox::warning(this, "Error", "Failed to start recording. Check microphone settings and PortAudio.");
             return;
         }
     } else {
         recorder->stopRecording();
-        ui->recordButton->setText("Начать запись");
+        ui->recordButton->setText("Start Recording");
         isRecording = false;
-        QString message = "Запись остановлена. Файл сохранён в: " + QString::fromStdString(Config::wav_path);
-        updateStatus("Распознавание..."); // Обновляем статус на "Распознавание..."
+        QString message = "Recording stopped. File saved to: " + QString::fromStdString(Config::wav_path);
+        updateStatus("Recognizing..."); // Обновляем статус на "Recognizing..."
         ui->consoleTextEdit->append(formatResponse(message));
-        log->info("Запись остановлена.");
+        log->info("Recording stopped.");
 
-        log->info("Начало распознавания речи.");
+        log->info("Starting speech recognition.");
         std::string speech = recognizer->recognize(Config::wav_path);
 
         if (!speech.empty()) {
-            log->info("Речь распознана: " + speech);
-            ui->consoleTextEdit->append(formatResponse("Речь распознана: " + QString::fromStdString(speech)));
+            log->info("Speech recognized: " + speech);
+            ui->consoleTextEdit->append(formatResponse("Speech recognized: " + QString::fromStdString(speech)));
 
             std::string processedSpeech = speech;
             std::transform(processedSpeech.begin(), processedSpeech.end(), processedSpeech.begin(), ::tolower);
 
             if (processedSpeech.find("stop") != std::string::npos || processedSpeech.find("exit") != std::string::npos) {
-                log->info("Команда stop/exit обнаружена. Завершение работы.");
-                ui->consoleTextEdit->append(formatResponse("Команда stop/exit обнаружена. Завершение работы."));
+                log->info("Stop/exit command detected. Terminating application.");
+                ui->consoleTextEdit->append(formatResponse("Stop/exit command detected. Terminating application."));
                 QApplication::quit();
                 return;
             }
@@ -128,9 +128,9 @@ void MainWindow::on_recordButton_clicked()
                 auto devices = deviceConnection->getDiscoveredDevices();
 
                 if (devices.empty()) {
-                    log->warning("Устройства не найдены.");
-                    ui->consoleTextEdit->append(formatResponse("Устройства не найдены."));
-                    updateStatus("Устройства не найдены."); // Обновляем статус на "Устройства не найдены"
+                    log->warning("No devices found.");
+                    ui->consoleTextEdit->append(formatResponse("No devices found."));
+                    updateStatus("No devices found."); // Обновляем статус на "No devices found"
                     return;
                 }
 
@@ -143,53 +143,53 @@ void MainWindow::on_recordButton_clicked()
                             deviceIndex = std::stoi(numStr) - 1;
                             remote_command = processedSpeech.substr(pos + 6);
                         } catch (...) {
-                            log->warning("Не удалось определить номер устройства. Используется первое устройство.");
-                            ui->consoleTextEdit->append(formatResponse("Не удалось определить номер устройства. Используется первое устройство."));
+                            log->warning("Failed to determine device number. Using first device.");
+                            ui->consoleTextEdit->append(formatResponse("Failed to determine device number. Using first device."));
                             deviceIndex = 0;
                         }
                     }
                 }
 
-                log->info("Отправка команды устройству #" + std::to_string(deviceIndex + 1));
-                ui->consoleTextEdit->append(formatResponse(QString("Отправка команды устройству #%1").arg(deviceIndex + 1)));
+                log->info("Sending command to device #" + std::to_string(deviceIndex + 1));
+                ui->consoleTextEdit->append(formatResponse(QString("Sending command to device #%1").arg(deviceIndex + 1)));
 
                 std::string response = deviceConnection->sendCommand(deviceIndex, remote_command, Config::dc_port);
 
                 if (response != "0") {
-                    log->info("Команда успешно отправлена устройству #" + std::to_string(deviceIndex + 1));
-                    log->info("Ответ устройства: " + response);
-                    ui->consoleTextEdit->append(formatResponse(QString("Команда успешно отправлена устройству #%1").arg(deviceIndex + 1)));
-                    ui->consoleTextEdit->append(formatResponse("Ответ устройства: " + QString::fromStdString(response)));
+                    log->info("Command successfully sent to device #" + std::to_string(deviceIndex + 1));
+                    log->info("Device response: " + response);
+                    ui->consoleTextEdit->append(formatResponse(QString("Command successfully sent to device #%1").arg(deviceIndex + 1)));
+                    ui->consoleTextEdit->append(formatResponse("Device response: " + QString::fromStdString(response)));
                     std::wstring w_response(response.begin(), response.end());
                     tts->speak(w_response);
-                    updateStatus("Ответ нейросети..."); // Временный статус
-                    QTimer::singleShot(2000, this, [this]() { updateStatus("Ожидание следующей команды..."); }); // Возвращаем к ожиданию
+                    updateStatus("Neural network response..."); // Временный статус
+                    QTimer::singleShot(2000, this, [this]() { updateStatus("Waiting for next command..."); }); // Возвращаем к ожиданию
                 } else {
-                    log->warning("Не удалось отправить команду устройству #" + std::to_string(deviceIndex + 1));
-                    ui->consoleTextEdit->append(formatResponse(QString("Не удалось отправить команду устройству #%1").arg(deviceIndex + 1)));
-                    updateStatus("Ошибка при отправке команды устройству. Ожидание следующей команды..."); // Обновляем статус на ошибку
+                    log->warning("Failed to send command to device #" + std::to_string(deviceIndex + 1));
+                    ui->consoleTextEdit->append(formatResponse(QString("Failed to send command to device #%1").arg(deviceIndex + 1)));
+                    updateStatus("Error sending command to device. Waiting for next command..."); // Обновляем статус на ошибку
                 }
             } else {
-                log->info("Отправка запроса в нейросеть: " + speech);
-                updateStatus("Ответ нейросети..."); // Обновляем статус на "Ответ нейросети..."
+                log->info("Sending request to neural network: " + speech);
+                updateStatus("Neural network response..."); // Обновляем статус на "Neural network response..."
                 std::string response = koboldClient->sendRequest(speech);
 
                 if (!response.empty()) {
-                    log->info("Ответ от нейросети: " + response);
-                    ui->consoleTextEdit->append(formatResponse("Ответ от нейросети: " + QString::fromStdString(response)));
+                    log->info("Neural network response: " + response);
+                    ui->consoleTextEdit->append(formatResponse("Neural network response: " + QString::fromStdString(response)));
                     std::wstring w_response(response.begin(), response.end());
                     tts->speak(w_response);
-                    QTimer::singleShot(2000, this, [this]() { updateStatus("Ожидание следующей команды..."); }); // Возвращаем к ожиданию
+                    QTimer::singleShot(2000, this, [this]() { updateStatus("Waiting for next command..."); }); // Возвращаем к ожиданию
                 } else {
-                    log->error("Ошибка: Нейросеть не вернула ответ для запроса: " + speech);
-                    ui->consoleTextEdit->append(formatResponse("Ошибка: Нейросеть не вернула ответ."));
-                    updateStatus("Ошибка: Нейросеть не вернула ответ. Ожидание следующей команды..."); // Обновляем статус на ошибку
+                    log->error("Error: Neural network did not return a response for request: " + speech);
+                    ui->consoleTextEdit->append(formatResponse("Error: Neural network did not return a response."));
+                    updateStatus("Error: Neural network did not return a response. Waiting for next command..."); // Обновляем статус на ошибку
                 }
             }
         } else {
-            log->error("Ошибка распознавания или пустой результат.");
-            ui->consoleTextEdit->append(formatResponse("Ошибка распознавания или пустой результат."));
-            updateStatus("Ошибка распознавания. Ожидание следующей команды..."); // Обновляем статус на ошибку
+            log->error("Recognition error or empty result.");
+            ui->consoleTextEdit->append(formatResponse("Recognition error or empty result."));
+            updateStatus("Recognition error. Waiting for next command..."); // Обновляем статус на ошибку
         }
     }
 }
@@ -198,8 +198,8 @@ void MainWindow::on_listMicrophonesButton_clicked()
 {
     ui->consoleTextEdit->clear();
     updateMicrophoneList();
-    updateStatus("Список микрофонов обновлён. Ожидание следующей команды...");
-    log->info("Кнопка List Microphones нажата, список обновлён.");
+    updateStatus("Microphone list updated. Waiting for next command...");
+    log->info("List Microphones button clicked, list updated.");
     ui->microphoneComboBox->update();
 }
 
@@ -211,31 +211,31 @@ void MainWindow::on_showLogButton_clicked()
         QTextStream in(&file);
         ui->consoleTextEdit->setText(in.readAll());
         file.close();
-        updateStatus("Лог отображён. Ожидание следующей команды...");
+        updateStatus("Log displayed. Waiting for next command...");
     } else {
-        updateStatus("Ошибка: Не удалось открыть лог. Ожидание следующей команды...");
-        QMessageBox::warning(this, "Ошибка", "Не удалось открыть файл лога.");
+        updateStatus("Error: Failed to open log. Waiting for next command...");
+        QMessageBox::warning(this, "Error", "Failed to open log file.");
     }
 }
 
 void MainWindow::on_scanNetworkButton_clicked()
 {
     ui->consoleTextEdit->clear();
-    log->info("Начало сканирования сети с подсетью: " + Config::dc_subnet + ", порт: " + std::to_string(Config::dc_port));
+    log->info("Starting network scan with subnet: " + Config::dc_subnet + ", port: " + std::to_string(Config::dc_port));
     deviceConnection->scanLocalNetwork(Config::dc_subnet, Config::dc_port);
     std::vector<std::string> devices = deviceConnection->getDiscoveredDevices();
     QString result;
     if (devices.empty()) {
-        result = "Не найдено устройств в сети.";
-        updateStatus("Сеть просканирована. Устройства не найдены. Ожидание следующей команды...");
-        log->warning("Сканирование завершено. Устройства не найдены.");
+        result = "No devices found in the network.";
+        updateStatus("Network scanned. No devices found. Waiting for next command...");
+        log->warning("Scan completed. No devices found.");
     } else {
-        result = "Обнаружено устройств: " + QString::number(devices.size()) + "<br>";
+        result = "Devices found: " + QString::number(devices.size()) + "<br>";
         for (const auto& device : devices) {
             result += QString::fromStdString(device) + "<br>";
         }
-        updateStatus("Сеть просканирована. Ожидание следующей команды...");
-        log->info("Сканирование завершено. Обнаружено устройств: " + std::to_string(devices.size()));
+        updateStatus("Network scanned. Waiting for next command...");
+        log->info("Scan completed. Devices found: " + std::to_string(devices.size()));
     }
     ui->consoleTextEdit->append(formatResponse(result));
 }
@@ -248,46 +248,46 @@ void MainWindow::on_saveSettingsButton_clicked()
 void MainWindow::on_sendTextButton_clicked()
 {
     if (isProcessing) {
-        log->info("Повторный вызов on_sendTextButton_clicked заблокирован (isProcessing = true).");
+        log->info("Repeated call to on_sendTextButton_clicked blocked (isProcessing = true).");
         return;
     }
 
-    log->info("Кнопка Send Text нажата (первый вызов).");
+    log->info("Send Text button clicked (first call).");
     isProcessing = true;
 
     ui->sendTextButton->setEnabled(false);
     QTimer::singleShot(1000, this, [this]() {
         ui->sendTextButton->setEnabled(true);
         isProcessing = false;
-        log->info("Кнопка Send Text разблокирована после таймера.");
+        log->info("Send Text button unblocked after timer.");
     });
 
     ui->consoleTextEdit->clear();
     QString text = ui->inputLineEdit->text().trimmed();
     if (text.isEmpty()) {
-        updateStatus("Ошибка: Введите текст для отправки. Ожидание следующей команды...");
-        ui->consoleTextEdit->append(formatResponse("Ошибка: Введите текст для отправки."));
-        log->warning("Попытка отправить пустой текст.");
+        updateStatus("Error: Enter text to send. Waiting for next command...");
+        ui->consoleTextEdit->append(formatResponse("Error: Enter text to send."));
+        log->warning("Attempt to send empty text.");
         return;
     }
 
-    log->info("Отправлен текстовый запрос: " + text.toStdString());
-    updateStatus("Обработка текста..."); // Изменяем статус на "Обработка текста..."
+    log->info("Text request sent: " + text.toStdString());
+    updateStatus("Processing text..."); // Изменяем статус на "Processing text..."
     QTimer::singleShot(1000, this, [this, text]() {
-        updateStatus("Ответ нейросети..."); // Изменяем статус на "Ответ нейросети..."
+        updateStatus("Neural network response..."); // Изменяем статус на "Neural network response..."
         std::string response = koboldClient->sendRequest(text.toStdString());
 
         if (!response.empty()) {
-            log->info("Ответ от нейросети: " + response);
-            ui->consoleTextEdit->append(formatResponse("Ваш запрос: " + text));
-            ui->consoleTextEdit->append(formatResponse("Ответ от нейросети: " + QString::fromStdString(response)));
+            log->info("Neural network response: " + response);
+            ui->consoleTextEdit->append(formatResponse("Your request: " + text));
+            ui->consoleTextEdit->append(formatResponse("Neural network response: " + QString::fromStdString(response)));
             std::wstring w_response(response.begin(), response.end());
             tts->speak(w_response);
-            QTimer::singleShot(2000, this, [this]() { updateStatus("Ожидание следующей команды..."); }); // Возвращаем к ожиданию
+            QTimer::singleShot(2000, this, [this]() { updateStatus("Waiting for next command..."); }); // Возвращаем к ожиданию
         } else {
-            log->error("Ошибка: Нейросеть не вернула ответ для текстового запроса: " + text.toStdString());
-            ui->consoleTextEdit->append(formatResponse("Ошибка: Нейросеть не вернула ответ."));
-            updateStatus("Ошибка: Нейросеть не вернула ответ. Ожидание следующей команды...");
+            log->error("Error: Neural network did not return a response for text request: " + text.toStdString());
+            ui->consoleTextEdit->append(formatResponse("Error: Neural network did not return a response."));
+            updateStatus("Error: Neural network did not return a response. Waiting for next command...");
         }
     });
 
@@ -304,12 +304,12 @@ void MainWindow::updateMicrophoneList()
     ui->microphoneComboBox->clear();
     std::vector<std::string> microphones = recorder->listAvailableMicrophones();
     if (microphones.empty()) {
-        updateStatus("Ошибка: Не удалось получить список микрофонов. Ожидание следующей команды...");
-        ui->consoleTextEdit->append(formatResponse("Ошибка: Не удалось получить список микрофонов."));
-        log->error("Не удалось получить список микрофонов. Проверьте PortAudio.");
-        QMessageBox::warning(this, "Ошибка", "Не удалось получить список микрофонов. Проверьте PortAudio.");
+        updateStatus("Error: Failed to retrieve microphone list. Waiting for next command...");
+        ui->consoleTextEdit->append(formatResponse("Error: Failed to retrieve microphone list."));
+        log->error("Failed to retrieve microphone list. Check PortAudio.");
+        QMessageBox::warning(this, "Error", "Failed to retrieve microphone list. Check PortAudio.");
     } else {
-        QString micList = "Доступные микрофоны:<br>";
+        QString micList = "Available microphones:<br>";
         for (const auto& mic : microphones) {
             ui->microphoneComboBox->addItem(QString::fromStdString(mic));
             micList += QString::fromStdString(mic) + "<br>";
@@ -321,7 +321,7 @@ void MainWindow::updateMicrophoneList()
         } else {
             ui->microphoneComboBox->setCurrentIndex(0);
             Config::microphone = ui->microphoneComboBox->currentText().toStdString();
-            log->info("Текущий микрофон не найден, выбран: " + Config::microphone);
+            log->info("Current microphone not found, selected: " + Config::microphone);
         }
         ui->microphoneComboBox->update();
     }
@@ -334,8 +334,6 @@ void MainWindow::updateStatus(const QString& message)
 
 void MainWindow::loadSettings()
 {
-    ui->appNameLineEdit->setText(QString::fromStdString(Config::app_name));
-    ui->appVersionLineEdit->setText(QString::fromStdString(Config::app_version));
     ui->microphoneComboBox->setCurrentText(QString::fromStdString(Config::microphone));
     ui->logPathLineEdit->setText(QString::fromStdString(Config::log_path));
     ui->wavPathLineEdit->setText(QString::fromStdString(Config::wav_path));
@@ -353,10 +351,6 @@ void MainWindow::loadSettings()
 
 void MainWindow::saveSettings()
 {
-    log->info("Сохранение настроек: app_name = " + ui->appNameLineEdit->text().toStdString() + ", app_version = " + ui->appVersionLineEdit->text().toStdString());
-
-    Config::app_name = ui->appNameLineEdit->text().toStdString();
-    Config::app_version = ui->appVersionLineEdit->text().toStdString();
     Config::microphone = ui->microphoneComboBox->currentText().toStdString();
     Config::log_path = ui->logPathLineEdit->text().toStdString();
     Config::wav_path = ui->wavPathLineEdit->text().toStdString();
@@ -376,14 +370,20 @@ void MainWindow::saveSettings()
     bool success = Config::saveAllConfig(configPath.toStdString());
     if (success) {
         log->info("Settings saved successfully to " + configPath.toStdString());
-        updateStatus("Настройки сохранены. Ожидание следующей команды...");
+        updateStatus("Settings saved. Waiting for next command...");
 
-        QString windowTitle = QString::fromStdString(Config::app_name) + " v" + QString::fromStdString(Config::app_version);
+        QString windowTitle = QString::fromStdString(Config::app_name);
         setWindowTitle(windowTitle);
-        log->info("Обновлён заголовок окна: " + windowTitle.toStdString());
+
+        QLabel* versionLabel = dynamic_cast<QLabel*>(ui->statusbar->children().last());
+        if (versionLabel) {
+            versionLabel->setText("v " + QString::fromStdString(Config::app_version));
+        }
+
+        log->info("Window title updated: " + windowTitle.toStdString());
     } else {
         log->error("Failed to save settings to " + configPath.toStdString());
-        updateStatus("Ошибка: Не удалось сохранить настройки. Ожидание следующей команды...");
-        QMessageBox::warning(this, "Ошибка", "Не удалось сохранить настройки. Проверь права доступа или путь к файлу.");
+        updateStatus("Error: Failed to save settings. Waiting for next command...");
+        QMessageBox::warning(this, "Error", "Failed to save settings. Check file permissions or path.");
     }
 }
