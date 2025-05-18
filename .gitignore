@@ -1,14 +1,14 @@
 AI-assistant/
 x64/
 software/
-files/voice_record.wav
+files/recording.wav
 files/log.log
 .vs/
 AI-assistant.sln
 AI-assistant.vcxproj
 AI-assistant.vcxproj.filters
 AI-assistant.vcxproj.user
-files/voice_record.wav.txt
+files/recording.wav.txt
 ffmpeg_output.log
 include/curl
 include/nlohmann
