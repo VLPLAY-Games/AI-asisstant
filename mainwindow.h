@@ -1,3 +1,6 @@
+// Copyright MIT License 2025 VL_PLAY Games
+
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -15,15 +18,14 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
     Q_OBJECT
 
-public:
-    MainWindow(QWidget *parent = nullptr);
+ public:
+    explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-private slots:
+ private slots:
     void on_recordButton_clicked();
     void on_listMicrophonesButton_clicked();
     void on_showLogButton_clicked();
@@ -31,7 +33,7 @@ private slots:
     void on_saveSettingsButton_clicked();
     void on_sendTextButton_clicked();
 
-private:
+ private:
     Ui::MainWindow *ui;
     Log *log;
     Recorder *recorder;

@@ -13,24 +13,24 @@
 #include <unistd.h>
 #endif
 
-Recognizer::Recognizer(const std::string &whisperPath, const std::string &modelPath, Log &log)
+Recognizer::Recognizer(const std::string &whisperPath, \
+    const std::string &modelPath, Log &log)
     : whisperPath(whisperPath)
     , modelPath(modelPath)
-    , log(log)
-{
+    , log(log) {
     std::cout << "\n###############################\n";
     std::cout << "     Initializing Whisper    ";
     std::cout << "\n###############################\n\n";
 
-    log.info("Initializing Whisper with CLI path: " + whisperPath + " and model path: " + modelPath);
+    log.info("Initializing Whisper with CLI path: " + \
+        whisperPath + " and model path: " + modelPath);
 
     std::cout << "\n#########################################\n";
     std::cout << "     Initialized Whisper Successfully    ";
     std::cout << "\n#########################################\n\n";
 }
 
-std::string Recognizer::recognize(const std::string &filename)
-{
+std::string Recognizer::recognize(const std::string &filename) {
     log.info("Starting speech recognition for file: " + filename);
 
     // Удаляем старый текстовый файл, если он существует
@@ -49,14 +49,17 @@ std::string Recognizer::recognize(const std::string &filename)
     temp.close();
 
     // Формируем команду для Whisper
-    std::string command = whisperPath + " -m \"" + modelPath + "\" -f \"" + filename
-                          + "\" --language en --output-txt --no-prints " + "--suppress-nst";
+    std::string command = whisperPath + " -m \"" + \
+                        modelPath + "\" -f \"" + filename
+                        + "\" --language en --output-txt --no-prints " + \
+                        "--suppress-nst";
     log.info("Executing Whisper command: " + command);
 
     // Выполняем команду
     int result = std::system(command.c_str());
     if (result != 0) {
-        log.error("Whisper command failed with exit code: " + std::to_string(result));
+        log.error("Whisper command failed with exit code: " + \
+            std::to_string(result));
         return "";
     }
 

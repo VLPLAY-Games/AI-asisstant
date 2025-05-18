@@ -1,4 +1,4 @@
-﻿  //  Copyright MIT License 2025 VL_PLAY Games
+﻿//  Copyright MIT License 2025 VL_PLAY Games
 
 
 #pragma once
@@ -13,7 +13,8 @@
 
 class Recognizer {
  public:
-    Recognizer(const std::string& whisperPath, const std::string& modelPath, Log &log);
+    Recognizer(const std::string& whisperPath, \
+      const std::string& modelPath, Log &log);
     std::string recognize(const std::string& filename);
 
  private:

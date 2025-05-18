@@ -1,4 +1,7 @@
-﻿// config.cpp
+﻿// Copyright MIT License 2025 VL_PLAY Games
+
+
+// config.cpp
 #include "../include/config.h"
 #include <fstream>
 #include <iostream>
@@ -24,8 +27,7 @@ std::string Config::koboldcpp_model_path = "";
 std::string Config::dc_subnet = "192.168.0.0/24";
 int Config::dc_port = 50505;
 
-bool Config::loadConfig(const std::string &filepath)
-{
+bool Config::loadConfig(const std::string &filepath) {
     std::ifstream configFile(filepath);
     if (!configFile.is_open()) {
         std::cerr << "Error: Cannot open config file " << filepath << std::endl;
@@ -50,8 +52,7 @@ bool Config::loadConfig(const std::string &filepath)
 
 bool Config::updateConfig(const std::string &filepath,
                           const std::string &parameter,
-                          const std::string &value)
-{
+                          const std::string &value) {
     // Читаем весь конфиг в map
     std::map<std::string, std::string> configMap;
     std::ifstream configFile(filepath);
@@ -90,11 +91,11 @@ bool Config::updateConfig(const std::string &filepath,
 }
 
 bool Config::saveConfig(const std::string &filepath,
-                        const std::map<std::string, std::string> &configMap)
-{
+                        const std::map<std::string, std::string> &configMap) {
     std::ofstream configFile(filepath);
     if (!configFile.is_open()) {
-        std::cerr << "Error: Cannot open config file for writing " << filepath << std::endl;
+        std::cerr << "Error: Cannot open config file for writing " \
+        << filepath << std::endl;
         return false;
     }
 
@@ -108,15 +109,16 @@ bool Config::saveConfig(const std::string &filepath,
     return true;
 }
 
-bool Config::saveAllConfig(const std::string& filepath)
-{
+bool Config::saveAllConfig(const std::string& filepath) {
     // Получаем абсолютный путь
     QString absolutePath = QDir(filepath.c_str()).absolutePath();
-    std::cout << "Saving config to absolute path: " << absolutePath.toStdString() << std::endl;
+    std::cout << "Saving config to absolute path: " \
+    << absolutePath.toStdString() << std::endl;
 
     std::ofstream configFile(filepath);
     if (!configFile.is_open()) {
-        std::cerr << "Error: Cannot open config file " << filepath << " for writing" << std::endl;
+        std::cerr << "Error: Cannot open config file " \
+        << filepath << " for writing" << std::endl;
         return false;
     }
 
@@ -141,8 +143,7 @@ bool Config::saveAllConfig(const std::string& filepath)
     return true;
 }
 
-void Config::parseLine(const std::string &line)
-{
+void Config::parseLine(const std::string &line) {
     std::istringstream iss(line);
     std::string key, value;
     if (std::getline(iss, key, '=') && std::getline(iss, value)) {
@@ -186,4 +187,3 @@ void Config::parseLine(const std::string &line)
             std::cerr << "Warning: Unknown config key: " << key << std::endl;
     }
 }
-

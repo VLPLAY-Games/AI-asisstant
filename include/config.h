@@ -1,4 +1,7 @@
-﻿// config.h
+﻿// Copyright MIT License 2025 VL_PLAY Games
+
+
+// config.h
 #pragma once
 #ifndef CONFIG_H
 #define CONFIG_H
@@ -7,7 +10,7 @@
 #include <map>
 
 class Config {
-public:
+ public:
     // Статические переменные конфигурации
     static std::string app_name;
     static std::string app_version;
@@ -33,7 +36,7 @@ public:
         const std::string& value);
     static bool saveAllConfig(const std::string& filepath);
 
-private:
+ private:
     static void parseLine(const std::string& line);
     static bool saveConfig(const std::string& filepath,
         const std::map<std::string, std::string>& configMap);

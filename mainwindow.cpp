@@ -1,3 +1,6 @@
+// Copyright MIT License 2025 VL_PLAY Games
+
+
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 #include <QMessageBox>

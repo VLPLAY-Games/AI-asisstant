@@ -1,4 +1,4 @@
-﻿  //  Copyright MIT License 2025 VL_PLAY Games
+﻿//  Copyright MIT License 2025 VL_PLAY Games
 
 
 #pragma once
@@ -12,7 +12,7 @@
 
 class Log {
  public:
-    Log(const std::string& log_path);
+    explicit Log(const std::string& log_path);
     void close_log();
     ~Log();
     void debug(const std::string& text);

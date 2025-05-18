@@ -24,10 +24,13 @@
 using json = nlohmann::json;
 
 class KoboldClient {
-public:
+ public:
     // Конструктор с параметром URL сервера и объектом Log
-    explicit KoboldClient(const std::string& server_url, const std::string& exe_path, \
-        const std::string& cfg_path, const std::string& model_path, Log& log);
+    explicit KoboldClient(const std::string& server_url, \
+        const std::string& exe_path, \
+        const std::string& cfg_path, \
+        const std::string& model_path, \
+        Log& log);
 
     // Деструктор
     ~KoboldClient();
@@ -41,7 +44,7 @@ public:
     // Метод для отправки запроса к серверу KoboldCpp
     std::string sendRequest(const std::string& prompt);
 
-private:
+ private:
     std::string server_url;  // URL сервера KoboldCpp
     std::string exe_path;
     std::string cfg_path;

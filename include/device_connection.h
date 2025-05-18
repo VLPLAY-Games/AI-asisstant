@@ -11,21 +11,23 @@
 #include <optional>
 
 class DC {
-public:
+ public:
     explicit DC(Log& log);
     ~DC();
 
-    void scanLocalNetwork(const std::string& base_ip, int port, int threads = 10);
+    void scanLocalNetwork(const std::string& base_ip, \
+        int port, int threads = 10);
     std::vector<std::string> getDiscoveredDevices();
-    std::string sendCommand(int deviceIndex, const std::string& command, int port);
-    
+    std::string sendCommand(int deviceIndex, \
+        const std::string& command, int port);
 
-private:
+ private:
     Log& log;
     bool isPortOpen(const std::string& ip, int port);
     void scanRange(const std::string& base_ip, int start, int end, int port);
     std::string getLocalIPAddress();
-    std::string getResponseFromDevice(const std::string& target_ip, int port, const std::string& command, const std::string& sender_ip);
+    std::string getResponseFromDevice(const std::string& target_ip, \
+        int port, const std::string& command, const std::string& sender_ip);
 
 
     std::vector<std::string> discoveredDevices;

@@ -16,13 +16,13 @@
 #endif
 
 class TextToSpeech {
-public:
-    TextToSpeech(Log& log);
+ public:
+    explicit TextToSpeech(Log& log);
     ~TextToSpeech();
 
     void speak(const std::wstring& text);
 
-private:
+ private:
     bool initialized;
     Log& log;
 

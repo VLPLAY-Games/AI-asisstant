@@ -1,4 +1,4 @@
-﻿  //  Copyright MIT License 2025 VL_PLAY Games
+﻿//  Copyright MIT License 2025 VL_PLAY Games
 
 
 #pragma once
@@ -11,8 +11,8 @@
 #include <mmsystem.h>
 #include <mmreg.h>
 
-  class Recorder {
-  public:
+class Recorder {
+ public:
       Recorder();
       ~Recorder();
 
@@ -21,10 +21,10 @@
       void stopRecording();
       std::vector<std::string> listAvailableMicrophones() const;
 
-  private:
+ private:
       std::string microphone_name;
       PaDeviceIndex findInputDeviceByName(const std::string& name);
       bool stopRequested;
-  };
+};
 
 #endif

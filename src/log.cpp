@@ -11,24 +11,20 @@
 #include <string>
 
 Log::Log(const std::string &log_path)
-    : log_path(log_path)
-{
+    : log_path(log_path) {
     log_file = fopen(log_path.c_str(), "a+");
     fclose(log_file);
 }
 
-void Log::close_log()
-{
+void Log::close_log() {
     fclose(log_file);
 }
 
-Log::~Log()
-{
+Log::~Log() {
     close_log();
 }
 
-std::string Log::getCurrentTime()
-{
+std::string Log::getCurrentTime() {
     // Получаем текущее время
     std::time_t now = std::time(nullptr);
     std::tm tm = *std::localtime(&now);
@@ -39,8 +35,7 @@ std::string Log::getCurrentTime()
     return oss.str();
 }
 
-void Log::debug(const std::string &text)
-{
+void Log::debug(const std::string &text) {
     std::cout << "[" + getCurrentTime() + "] [DEBUG] " + text + "\n";
     log_file = fopen(log_path.c_str(), "a+");
     std::string logEntry = "[" + getCurrentTime() + "] [DEBUG] " + text + "\n";
@@ -48,8 +43,7 @@ void Log::debug(const std::string &text)
     fclose(log_file);
 }
 
-void Log::info(const std::string &text)
-{
+void Log::info(const std::string &text) {
     std::cout << "[" + getCurrentTime() + "] [INFO] " + text + "\n";
     log_file = fopen(log_path.c_str(), "a+");
     std::string logEntry = "[" + getCurrentTime() + "] [INFO] " + text + "\n";
@@ -57,17 +51,16 @@ void Log::info(const std::string &text)
     fclose(log_file);
 }
 
-void Log::warning(const std::string &text)
-{
+void Log::warning(const std::string &text) {
     std::cout << "[" + getCurrentTime() + "] [WARNING] " + text + "\n";
     log_file = fopen(log_path.c_str(), "a+");
-    std::string logEntry = "[" + getCurrentTime() + "] [WARNING] " + text + "\n";
+    std::string logEntry = "[" + \
+        getCurrentTime() + "] [WARNING] " + text + "\n";
     fputs(logEntry.c_str(), log_file);
     fclose(log_file);
 }
 
-void Log::error(const std::string &text)
-{
+void Log::error(const std::string &text) {
     std::cerr << "[" + getCurrentTime() + "] [ERROR] " + text + "\n";
     log_file = fopen(log_path.c_str(), "a+");
     std::string logEntry = "[" + getCurrentTime() + "] [ERROR] " + text + "\n";
@@ -75,17 +68,16 @@ void Log::error(const std::string &text)
     fclose(log_file);
 }
 
-void Log::critical(const std::string &text)
-{
+void Log::critical(const std::string &text) {
     std::cout << "[" + getCurrentTime() + "] [CRITICAL] " + text + "\n";
     log_file = fopen(log_path.c_str(), "a+");
-    std::string logEntry = "[" + getCurrentTime() + "] [CRITICAL] " + text + "\n";
+    std::string logEntry = "[" + \
+        getCurrentTime() + "] [CRITICAL] " + text + "\n";
     fputs(logEntry.c_str(), log_file);
     fclose(log_file);
 }
 
-void Log::clear()
-{
+void Log::clear() {
     remove(log_path.c_str());
     log_file = fopen(log_path.c_str(), "a+");
     fclose(log_file);
